@@ -1,0 +1,47 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+.venv/
+venv/
+env/
+ENV/
+
+# Environnement (exclure tous les .env SAUF .env.example)
+.env*
+!.env.example
+navettes/.env*
+!navettes/.env.example
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+docker-compose.override.yml
+*.docker
+Dockerfile*
+
+# Logs et données temporaires
+*.log
+logs/
+tmp/
+cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Données (garder la structure)
+data/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
