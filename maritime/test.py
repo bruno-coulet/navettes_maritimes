@@ -1,0 +1,19 @@
+import requests
+
+
+# URL pour obtenir les informations sur les grilles du modèle
+url = "https://public-api.meteofrance.fr/previnum/DPPaquetWAVESMODELS/models/HYCOM2D-MARP/grids"
+
+# Si une clé d'API est nécessaire, ajoutez-la dans les headers
+headers = {
+    "Accept": "application/json",
+    # À décommenter ci-dessous si besoin
+    "Authorization": "Bearer eyJ4NXQiOiJOelU0WTJJME9XRXhZVGt6WkdJM1kySTFaakZqWVRJeE4yUTNNalEyTkRRM09HRmtZalkzTURkbE9UZ3paakUxTURRNFltSTVPR1kyTURjMVkyWTBNdyIsImtpZCI6Ik56VTRZMkkwT1dFeFlUa3paR0kzWTJJMVpqRmpZVEl4TjJRM01qUTJORFEzT0dGa1lqWTNNRGRsT1RnelpqRTFNRFE0WW1JNU9HWTJNRGMxWTJZME13X1JTMjU2IiwidHlwIjoiYXQrand0IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIwNDZmYjk2OS0zNDg2LTQ2ZDUtYTY2Ni0xYmU0ZDY0NWJkMTQiLCJhdXQiOiJBUFBMSUNBVElPTiIsImF1ZCI6IjNnZnBtUmZVYXF3amFHNjlLT0pHVU01d3hlY2EiLCJuYmYiOjE3NDc0MDM4NTUsImF6cCI6IjNnZnBtUmZVYXF3amFHNjlLT0pHVU01d3hlY2EiLCJzY29wZSI6ImRlZmF1bHQiLCJpc3MiOiJodHRwczpcL1wvcG9ydGFpbC1hcGkubWV0ZW9mcmFuY2UuZnJcL29hdXRoMlwvdG9rZW4iLCJleHAiOjE3NDc0MDc0NTUsImlhdCI6MTc0NzQwMzg1NSwianRpIjoiNTQ1YTczZGUtMGJiMS00MmFiLWIxYzUtYzUwOWU4OGZkMDlmIiwiY2xpZW50X2lkIjoiM2dmcG1SZlVhcXdqYUc2OUtPSkdVTTV3eGVjYSJ9.kgYyOOQwRxJB51rEFeFgjjzR1u5Nd2cnQLagy0aEZB4ZV8R1CcDYxhZzQUgRhT3SfkbvryKKa7O-1IGQ78K9BY_b5Dvq2PRK4Mh1VXRcLYukHGgXKPvWSxWowDaWKCL4Aa9epadZz3Uqw0Grc8HF0AasdvMIkuuARRk8bSMGj2mM9eLAkdA_77_FhhndO8yeSd_BEd8dtq_-am2BAgsIq7HI-xx7kD68fbAX1tCTuYtXM7Ec8gFZ-zF_TgtqWBcerYenjyhIWVmdgcFC6ZWkUCq2dkp-YA1tsm41my6sdo6lsJKUj545zsfkBbBwriOM2P1BHUPXUb4nJEw0lezmMw"
+}
+
+response = requests.get(url, headers=headers)
+if response.status_code == 200:
+    data = response.json()
+    print(data)  # Affiche la structure des grilles et les variables disponibles
+else:
+    print("Erreur :", response.status_code)
