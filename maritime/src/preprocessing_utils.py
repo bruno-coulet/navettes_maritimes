@@ -1,7 +1,25 @@
+"""Fonctions de pretraitement reutilisables pour la modelisation.
+
+Responsabilite:
+- convertir les dates/heures
+- encoder la mer, le vent, la houle et les variables nominales
+- preparer un DataFrame directement exploitable par les notebooks et scripts ML
+
+Entrees:
+- DataFrame maritime nettoye ou chemin vers un CSV nettoye
+
+Sorties:
+- DataFrame enrichi avec variables numeriques / one-hot
+
+Commande:
+- module utilitaire, importable depuis les notebooks et scripts
+"""
+
 import pandas as pd
 import numpy as np
 import datetime
 import pytz
+from pathlib import Path
 from astral import LocationInfo
 from astral.sun import sun
 from matplotlib.colors import LinearSegmentedColormap
@@ -133,7 +151,7 @@ def preprocess_maritime_data(source):
     Pipeline complet de prétraitement de source
     """
     # Import
-    if isinstance(source, str):  # si c’est un chemin
+    if isinstance(source, (str, Path)):  # si c’est un chemin
         df = pd.read_csv(source, index_col=0)
     else:
         df = source.copy()

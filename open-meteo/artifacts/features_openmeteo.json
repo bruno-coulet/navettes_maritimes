@@ -1,0 +1,45 @@
+{
+  "feature_names": [
+    "wave_height_max",
+    "wave_direction_dominant",
+    "wave_period_max",
+    "wind_wave_height_max",
+    "swell_wave_height_max",
+    "temperature_max",
+    "temperature_min",
+    "wind_speed_max",
+    "wind_gusts_max",
+    "wave_to_swell_ratio",
+    "total_wave_energy",
+    "wind_to_wave_ratio",
+    "temp_range"
+  ],
+  "n_features": 13,
+  "model_type": "RandomForestClassifier",
+  "model_params": {
+    "n_estimators": 100,
+    "max_depth": 10,
+    "min_samples_split": 5
+  },
+  "metrics": {
+    "accuracy": 0.8055555555555556,
+    "precision": 0.7926829268292683,
+    "recall": 0.8552631578947368,
+    "f1": 0.8227848101265823,
+    "confusion_matrix": [
+      [
+        51,
+        17
+      ],
+      [
+        11,
+        65
+      ]
+    ],
+    "test_size": 144,
+    "train_size": 575
+  },
+  "trained_at": "2026-05-13T15:54:46.497451",
+  "source": "Open-Meteo (merged with Maritime annulations - CORRECTED)",
+  "notes": "v2_corrected: Fixed aggregation bug (mean instead of max)"
+}

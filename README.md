@@ -12,9 +12,12 @@ Dossier parent qui regroupe les 3 repos du projet :
 ```text
 ~/projets/navettes_maritimes/
   ├─ meteo_marine/
-  ├─ maritime/
-  ├─ navettes/
-  └─ docker-compose.orchestration.yml
+  ├── maritime/
+  ├── navettes/
+  ├── front_app/
+  ├── Dockerfile.api
+  ├── Dockerfile.front
+  └── docker-compose.orchestration.yml
 ```
 
 ## Lancement
@@ -61,14 +64,54 @@ cd navettes_maritimes
 
 ### 2. Configurer l'environnement
 
-Créer un fichier `.env` à la racine avec les variables suivantes (exemple dans `.env.example`) :
+#### Centralized configuration
+
+Les variables d'environnement sont centralisées à la racine du projet dans un fichier `.env`.
+
+**Créer le fichier `.env` en copiant l'exemple** :
+```bash
+cp .env.example .env
+```
+
+Editer `.env` avec vos valeurs (surtout les proxies et clés API) :
 
 ```ini
+# Proxy (si nécessaire)
+HTTP_PROXY=http://proxy.rtm.lan:3129
+HTTPS_PROXY=http://proxy.rtm.lan:3129
+ALL_PROXY=
+
+# Météo-France API key (laisser vide en VCS)
+METEO_FRANCE_API_KEY=
+
+# Ports et chemins
 NAVETTES_PRED_PORT=8000
 METEO_DATA_PATH=./data/meteo
 MODEL_PATH=./data/artifacts/model.pkl
 FEATURES_PATH=./data/artifacts/features.json
 ```
+
+**Note** : Le fichier `.env` n'est jamais commité (voir `.gitignore`). Seul `.env.example` est dans le dépôt.
+
+### Service-specific examples
+
+Chaque service possède également un fichier `.env.example` local :
+- `maritime/.env.example` : variables relatives au traitement des données maritimes
+- `navettes/.env.example` : variables relatives à l'API de prédiction
+- `meteo_marine/.env.example` : variables proxy pour la collecte météo
+- `front_app/.env.example` : URL publique de l'API et port Streamlit
+
+Un développeur peut créer des fichiers `.env` locaux pour chaque service s'il souhaite des surcharges spécifiques.
+
+#### Déploiement VPS / Traefik
+
+Pour un déploiement exposé par Traefik, utilisez plutôt les Dockerfiles racine :
+- `Dockerfile.api` pour le backend FastAPI
+- `Dockerfile.front` pour le frontend Streamlit
+
+Les Dockerfiles historiques dans `meteo_marine/` et `maritime/` restent utiles pour la pipeline de collecte et d'entraînement, mais ils ne sont pas nécessaires pour le front de production.
+
+Le fichier `docker-compose.orchestration.yml` garde le rôle de pipeline interne collecte → entraînement → prédiction. Pour le VPS, il est préférable d'avoir un compose séparé, par exemple `docker-compose.vps.yml`, afin de ne pas mélanger les dépendances de build avec les labels Traefik et les routes publiques.
 
 ### 3. Lancer la pipeline complète
 
@@ -88,20 +131,48 @@ docker-compose -f docker-compose.orchestration.yml up --build
 
 ```
 navettes_maritimes/
-├── meteo_marine/       # Collecte des données météo (API Météo France, etc.)
-├── maritime/           # Entraînement du modèle (nettoyage, features, training)
-├── navettes/           # Inférence (API FastAPI/Flask pour les prédictions)
+├── .env                # Configuration centralisée (À CRÉER depuis .env.example)
+├── .env.example        # Template de configuration
+├── meteo_marine/
+│   ├── .env.example    # Exemple de variables locales (optionnel)
+│   ├── src/
+│   ├── data/
+│   └── README.md       # Service de collecte des données météo
+├── maritime/
+│   ├── .env.example    # Exemple de variables locales (optionnel)
+│   ├── notebooks/      # Notebooks d'exploration et entraînement
+│   ├── src/            # Modules d'entraînement et de prétraitement
+│   ├── data/
+│   └── README.md       # Service d'entraînement du modèle
+├── navettes/
+│   ├── .env.example    # Exemple de variables locales (optionnel)
+│   ├── src/            # API FastAPI de prédiction
+│   └── README.md       # Service d'inférence en temps réel
 ├── docker-compose.orchestration.yml  # Orchestration Docker
-└── README.md           # Ce fichier
+└── README.md           # Ce fichier (instructions principales)
 ```
 
 ---
 
 ## 🔧 Développement
 
+### Organisation générale
+
 - **Données** : Les données brutes et traitées sont stockées dans `./data/`.
-- **Modèle** : Le modèle entraîné est sauvegardé dans `./data/artifacts/`.
+- **Modèle** : Le modèle entraîné est sauvegardé dans `./data/artifacts/model.pkl` avec ses métadonnées en `features.json`.
 - **Logs** : Les logs des services sont accessibles via `docker logs <container_name>`.
+
+### Travailler localement (sans Docker)
+
+Chaque service peut être développé indépendamment :
+
+1. **meteo_marine** : récupère les données météo (voir `meteo_marine/README.md`)
+2. **maritime** : entraîne et exporte le modèle (voir `maritime/README.md`)
+3. **navettes** : expose une API de prédiction (voir `navettes/README.md`)
+
+### Configuration locales des services
+
+Si vous souhaitez une configuration locale différente pour un service, créez un `.env` dans le dossier du service en copiant le `.env.example` correspondant. Les variables d'environnement du service seront chargées à partir de ce fichier `.env` local.
 
 ---
 

@@ -1,0 +1,24 @@
+{
+  "version": "v1",
+  "timestamp": "20260513_145955",
+  "data_source": "maritime",
+  "csv_path": "default",
+  "metrics": {
+    "accuracy": 0.9404679321435329,
+    "precision": 0.9300306435137896,
+    "recall": 0.6929223744292238,
+    "f1": 0.7941561273440907,
+    "confusion_matrix": [
+      [
+        13092,
+        137
+      ],
+      [
+        807,
+        1821
+      ]
+    ]
+  },
+  "n_samples": 79285,
+  "n_features": 136
+}

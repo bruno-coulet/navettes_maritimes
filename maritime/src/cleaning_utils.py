@@ -1,3 +1,20 @@
+"""Nettoyage initial des donnees maritimes.
+
+Responsabilite:
+- charger le fichier source brut `consolidation_maritime.xlsx`
+- nettoyer les colonnes horaires et meteo
+- produire une base normalisee prete pour l'etape de selection de ligne
+
+Entrees:
+- fichier Excel brut contenant `Horaire`, `Ligne`, `Annulation`, `Meteo`, `Bateau`, `Capitaine`
+
+Sorties:
+- DataFrame nettoye avec colonnes `Date`, `Heure`, variables meteo et cible `Annulation`
+
+Commande:
+- importe comme module depuis `src/` ou depuis les notebooks de nettoyage
+"""
+
 import pandas as pd
 
 

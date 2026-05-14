@@ -12,6 +12,18 @@ Le projet couvre trois blocs :
 2. selection d'un sous-ensemble par ligne / trajet,
 3. pretraitement avance et comparaison de modeles.
 
+## Demarrage rapide
+
+Ordre recommande pour travailler sur les donnees :
+
+1. ouvrir et executer `01_cleaning.ipynb` depuis la racine du depot,
+2. verifier que `data/maritime_clean.csv` est bien généré,
+3. lancer `02_ligne_selector.ipynb` pour produire le sous-ensemble voulu,
+4. utiliser `src/preprocessing_utils.py` ou `03_processing_v1.ipynb` pour fabriquer les variables d'analyse,
+5. ouvrir `04_model_comparison.ipynb` pour comparer les modeles.
+
+Important : plusieurs chemins sont relatifs et supposent une execution depuis la racine du projet.
+
 ## Fonctionnement general
 
 Le flux de travail actuel est le suivant :
@@ -29,12 +41,6 @@ En pratique, `data/maritime_clean.csv` est le fichier pivot du projet. Les autre
 
 ```text
 .
-├── API_meteo_france/
-│   ├── API_meteoFrance.py
-│   ├── api_clim_table_parametres_quotidiens.csv
-│   ├── commande_station_mensuelle.json
-│   ├── liste_stations_quotidienne.json
-│   └── Package_Modèles_de_vague_et_surcote_swagger.json
 ├── data/
 │   ├── consolidation_maritime.xlsx
 │   ├── maritime_clean.csv
@@ -50,16 +56,11 @@ En pratique, `data/maritime_clean.csv` est le fichier pivot du projet. Les autre
 │   ├── 03_processing_v0.ipynb
 │   ├── 03_processing_v1.ipynb
 │   ├── 04_model_comparison.ipynb
-│   ├── cleanning_old.ipynb
-│   └── copernicusAPI.ipynb
-├── src/
-│   ├── cleaning_utils.py
-│   └── preprocessing_utils.py
-├── versions_py/
-│   ├── maritime_processing.py
-│   └── mer.py
-├── carte.py
-└── test.py
+│   └── cleanning_old.ipynb
+└── src/
+    ├── cleaning_utils.py
+    └── preprocessing_utils.py
+
 ```
 
 ## Entrées et sorties par fichier
@@ -70,11 +71,7 @@ En pratique, `data/maritime_clean.csv` est le fichier pivot du projet. Les autre
 | --- | --- | --- |
 | `src/cleaning_utils.py` | Fichier Excel brut, en pratique `data/consolidation_maritime.xlsx`, avec les colonnes `Horaire`, `Ligne`, `Annulation`, `Météo`, `Bateau`, `Capitaine` | DataFrame nettoyé avec `Date`, `Heure`, les sous-colonnes météo, `AnnulationMotif`, `Annulation`, puis colonnes réorganisées prêtes à export |
 | `src/preprocessing_utils.py` | CSV ou DataFrame déjà nettoyé, par exemple `data/maritime_clean.csv` ou un sous-ensemble comme `data/frioul_if.csv` | DataFrame transformé pour la modélisation avec `Mois`, `Heure_num`, `JourNuit`, encodages de `Mer`, `Vent`, `Houle`, indicateurs `Mistral` et one-hot encoding des variables nominales |
-| `carte.py` | Aucune entrée fichier. Le script utilise des coordonnées fixes autour de Marseille, de l'Île d'If et du Frioul | Figure cartographique affichée à l'écran avec `matplotlib` / `cartopy` |
-| `API_meteo_france/API_meteoFrance.py` | Identifiant applicatif Météo-France, URL du token et requête HTTP de test | Réponses HTTP récupérées puis affichées dans la console, avec renouvellement de jeton si besoin |
-| `test.py` | Fichier Excel `data/consolidation_maritime.xlsx`, colonne `G` contenant des textes météo | Fichier Excel `consolidation_maritime_extrait.xlsx` avec les colonnes extraites `vent_direction`, `vent_noeuds`, `Bft`, `mer`, `vagues_1`, `vagues_2`, `vagues_3` |
-| `versions_py/maritime_processing.py` | CSV `../data/frioul_if.csv` | DataFrame prétraité en mémoire, plus objets d'analyse comme `df_numeric` et `df_corr` |
-| `versions_py/mer.py` | URL Météo-France et jeton Bearer codé en dur pour test | Réponse JSON imprimée dans la console si la requête réussit |
+
 
 ### Notebooks
 
@@ -85,7 +82,6 @@ En pratique, `data/maritime_clean.csv` est le fichier pivot du projet. Les autre
 | `notebooks/03_processing_v0.ipynb` | Sous-ensemble CSV, souvent `data/frioul_if.csv` | Données transformées et graphiques ou tableaux d'exploration dans le notebook |
 | `notebooks/03_processing_v1.ipynb` | Même type de sous-ensemble nettoyé | Variante de prétraitement, visualisation et essais de features dans le notebook |
 | `notebooks/04_model_comparison.ipynb` | Données déjà prétraitées | Comparaison de modèles, scores et graphiques dans le notebook |
-| `notebooks/copernicusAPI.ipynb` | Données ou requêtes externes Copernicus / mer | Résultats exploratoires dans le notebook |
 | `notebooks/cleanning_old.ipynb` | Ancienne version du flux de nettoyage | Ancienne base nettoyée, conservée à titre d'historique |
 
 ### Donnees et artefacts
@@ -97,39 +93,10 @@ En pratique, `data/maritime_clean.csv` est le fichier pivot du projet. Les autre
 | `data/VP_frioul_if.csv`, `data/VP_If_reduit.csv` | Variantes intermédiaires ou réduites des données de trajet | Jeux de données intermédiaires pour essais de prétraitement ou de modèle |
 | `data/old/frioul_if_reduit.csv`, `data/old/frioul_if.csv`, `data/old/maritime_clean.csv`, `data/old/VP_frioul.csv`, `data/old/VP_if.csv` | Anciennes versions des CSV de travail | Archive de comparaison et d'historique |
 | `exports/` | Export manuel de travaux de notebook ou de script | Fichiers de sortie ponctuels, à usage de partage ou d'archivage |
-| `img/trig3.html` | Export HTML d'une visualisation | Carte ou rendu interactif consultable dans un navigateur |
-| `img/trig3_files/` | Ressources associées à `img/trig3.html` | Assets statiques pour l'affichage du HTML |
-| `API_meteo_france/api_clim_table_parametres_quotidiens.csv` | Tables de référence ou exports d'exemple liés à l'API Météo-France | Fichier d'appui pour comprendre les paramètres disponibles |
-| `API_meteo_france/commande_station_mensuelle.json` | Exemple de requête ou de commande pour l'API | Payload JSON de test |
-| `API_meteo_france/liste_stations_quotidienne.json` | Exemple de réponse ou de liste de stations | Données JSON de référence |
-| `API_meteo_france/Package_Modèles_de_vague_et_surcote_swagger.json` | Description Swagger du package API | Référence locale des endpoints et schémas |
-| `API_meteo_france/response_1747316360513.xml` | Réponse XML capturée depuis un appel API | Trace de test ou exemple de payload retour |
+
 
 Les notebooks et les scripts ci-dessus sont des artefacts de travail et non un pipeline automatise complet.
 
-## Demarrage rapide
-
-Le projet n'a pas de `requirements.txt` ou de `pyproject.toml` a la racine. Les dependances visibles dans le code sont principalement :
-
-- `pandas`
-- `numpy`
-- `matplotlib`
-- `scikit-learn`
-- `pytz`
-- `astral`
-- `requests`
-- `cartopy`
-- `openpyxl` pour lire le fichier Excel source
-
-Ordre recommande pour travailler sur les donnees :
-
-1. ouvrir et executer `01_cleaning.ipynb` depuis la racine du depot,
-2. verifier que `data/maritime_clean.csv` est bien genere,
-3. lancer `02_ligne_selector.ipynb` pour produire le sous-ensemble voulu,
-4. utiliser `src/preprocessing_utils.py` ou `03_processing_v1.ipynb` pour fabriquer les variables d'analyse,
-5. ouvrir `04_model_comparison.ipynb` pour comparer les modeles.
-
-Important : plusieurs chemins sont relatifs et supposent une execution depuis la racine du projet.
 
 ## Etat actuel du projet
 
@@ -140,7 +107,6 @@ Le depot est dans un etat de travail exploratoire, avec plusieurs elements deja 
 - la logique de modelisation est presente dans les notebooks, mais elle reste experimentale,
 - il n'y a pas encore de packaging, de CI, ni de suite de tests formalisee,
 - plusieurs notebooks et scripts sont des versions de travail ou des archives,
-- `API_meteo_france/API_meteoFrance.py` contient du code d'essai qui doit encore etre securise et nettoye avant un usage robuste.
 
 En l'etat, le projet est donc utilisable pour l'exploration et la recherche de features, mais pas encore comme application finale ou bibliotheque stabilisee.
 

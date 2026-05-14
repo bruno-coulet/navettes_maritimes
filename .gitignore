@@ -1,6 +1,9 @@
 # macOS
 .DS_Store
 
+# Script de Thomas Jolivet
+thomas/
+
 # Python
 __pycache__/
 *.py[cod]

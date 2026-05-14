@@ -1,4 +1,6 @@
-# Image utilisée par ../docker-compose.orchestration.yml
+# Dockerfile historique pour la pipeline d'entraînement.
+# Utilisé par `docker-compose.orchestration.yml` lors de la génération du modèle.
+# Conservé comme référence et pour les ré-exécutions du pipeline, pas pour le VPS de production.
 FROM python:3.11-slim
 
 WORKDIR /app

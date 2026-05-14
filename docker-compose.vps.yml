@@ -1,0 +1,67 @@
+# Compose de déploiement VPS pour Navettes Maritimes
+# - API FastAPI sur api.<domaine>
+# - Front Streamlit sur <domaine>
+# - Réseau Traefik externe déjà présent sur le VPS
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: navettes_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MODEL_PATH=${MODEL_PATH:-/model/model.pkl}
+      - FEATURES_PATH=${FEATURES_PATH:-/model/features.json}
+    volumes:
+      - maritime_artifacts:/model:ro
+    expose:
+      - "8000"
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.navettes-api.rule=Host(`api.navettes_maritimes.lab.zanza-creation.com`)"
+      - "traefik.http.routers.navettes-api.entrypoints=websecure"
+      - "traefik.http.routers.navettes-api.tls.certresolver=myresolver"
+      - "traefik.http.services.navettes-api.loadbalancer.server.port=8000"
+
+  front:
+    build:
+      context: .
+      dockerfile: Dockerfile.front
+    container_name: navettes_front
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - API_URL=${API_URL:-https://api.navettes_maritimes.lab.zanza-creation.com/predict}
+      - STREAMLIT_PORT=${STREAMLIT_PORT:-8501}
+    expose:
+      - "8501"
+    depends_on:
+      - api
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.navettes-front.rule=Host(`navettes_maritimes.lab.zanza-creation.com`)"
+      - "traefik.http.routers.navettes-front.entrypoints=websecure"
+      - "traefik.http.routers.navettes-front.tls.certresolver=myresolver"
+      - "traefik.http.services.navettes-front.loadbalancer.server.port=8501"
+
+volumes:
+  maritime_artifacts:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/artifacts
+      o: bind
+
+networks:
+  traefik:
+    external: true

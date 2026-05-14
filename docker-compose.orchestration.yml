@@ -1,5 +1,3 @@
-version: '3.9'
-
 # Orchestration pour la pipeline : collecte → entraînement → prédiction
 
 # Usage:

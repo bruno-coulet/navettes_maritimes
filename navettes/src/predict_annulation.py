@@ -1,11 +1,18 @@
-"""
-Service de prédiction d'annulation de navettes maritimes.
+"""API FastAPI de prediction d'annulation pour les navettes maritimes.
 
-Charge le modèle entraîné depuis maritime/artifacts/ et expose une API FastAPI
-pour prédire l'annulation en fonction des données météo.
+Responsabilite:
+- charger le modele et ses metadata depuis `artifacts/`
+- exposer un endpoint de prediction a partir de variables meteo
 
-Usage:
-    uvicorn src.predict_annulation:app --host 0.0.0.0 --port 8000
+Entrees:
+- fichiers `model.pkl` et `features.json`
+- payload JSON conforme au modele Pydantic `WeatherData`
+
+Sorties:
+- reponse JSON avec la prediction et la probabilite
+
+Commande:
+- `uvicorn src.predict_annulation:app --host 0.0.0.0 --port 8000`
 """
 
 import json
