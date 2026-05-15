@@ -182,7 +182,7 @@ def save_artifacts(model, metrics, feature_names):
 
     # Metrics
     with open(METRICS_PATH, "w", encoding="utf-8") as f:
-        json.dump(metrics, f, indent=2)
+        json.dump(metrics, f, ensure_ascii=False, indent=2)
     print(f"  ✓ Métriques : {METRICS_PATH}")
 
 

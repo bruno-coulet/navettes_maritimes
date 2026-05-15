@@ -12,9 +12,8 @@ standardisée pour faciliter la comparaison avec la V2 et la V3.
 import json
 from pathlib import Path
 from datetime import datetime
-import pandas as pd
 # On garde ton import existant pour la logique métier
-from maritime.src.features_v1 import load_and_prepare_data, train_model
+from features_v1 import load_and_prepare_data, train_model
 
 # === CONFIGURATION ===
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -31,13 +30,13 @@ def main():
 
     # 1. Chargement des données
     X, y = load_and_prepare_data()
-    
+
     # 2. Entraînement
     print(f"[2/4] Entraînement du modèle...")
-    
+
     # On récupère l'unique dictionnaire renvoyé
     results = train_model(X, y)
-    
+
     # Extraction depuis le dictionnaire (on adapte aux clés probables)
     # Si c'est un dictionnaire, les clés sont sûrement 'model' et 'metrics'
     model = results.get('model')
@@ -57,12 +56,12 @@ def main():
     # 4. Sauvegarde
     print(f"[3/4] Sauvegarde des artifacts...")
     RUN_DIR.mkdir(parents=True, exist_ok=True)
-    
+
     # Sauvegarde metrics_v1.json (Dossier run + Racine artifacts)
     for target_path in [RUN_DIR / "metrics_v1.json", ARTIFACTS_DIR / "metrics_v1.json"]:
         with open(target_path, "w") as f:
-            json.dump(output_metrics, f, indent=4)
-    
+            json.dump(output_metrics, f, ensure_ascii=False, indent=4)
+
     # Sauvegarde model_v1.pkl
     import joblib
     joblib.dump(model, ARTIFACTS_DIR / "model_v1.pkl")
