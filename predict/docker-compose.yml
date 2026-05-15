@@ -1,0 +1,6 @@
+# Dans ton docker-compose
+services:
+  api:
+    build: ./predict/api
+    volumes:
+      - ./v3_hybride/artifacts:/model  # On monte les artifacts V3 dans l'API

@@ -1,0 +1,172 @@
+.
+├── CLAUDE.md
+├── compare_versions.py
+├── docker-compose.orchestration.yml
+├── docker-compose.vps.yml
+├── front_app
+│   └── app.py
+├── navettes
+│   ├── docker-compose.yml
+│   ├── Dockerfile
+│   ├── LICENCE
+│   ├── main.py
+│   ├── Makefile
+│   ├── pyproject.toml
+│   ├── README.md
+│   └── src
+│       └── predict_annulation.py
+├── open_meteo_ml.egg-info
+│   ├── dependency_links.txt
+│   ├── PKG-INFO
+│   ├── requires.txt
+│   ├── SOURCES.txt
+│   └── top_level.txt
+├── promote_model.py
+├── pyproject.toml
+├── README.md
+├── REPORT_FINAL.md
+├── structure_projet.txt
+├── uv.lock
+├── v1_baseline
+│   ├── artifacts
+│   │   ├── metrics_v1.json
+│   │   ├── model_v1.pkl
+│   │   ├── preprocessing
+│   │   │   └── maritime_clean
+│   │   │       ├── metadata.json
+│   │   │       ├── preprocessed_numeric.csv
+│   │   │       ├── preprocessed_reduced.csv
+│   │   │       └── preprocessed.csv
+│   │   └── run_v1_20260515_020113
+│   │       └── metrics_v1.json
+│   ├── data
+│   │   ├── consolidation_maritime.xlsx
+│   │   ├── lignes
+│   │   │   ├── Frioul_if.csv
+│   │   │   ├── PR_goudes.csv
+│   │   │   ├── VP_estaque.csv
+│   │   │   ├── VP_frioul_if.csv
+│   │   │   ├── VP_frioul.csv
+│   │   │   ├── VP_if.csv
+│   │   │   └── VP_PR.csv
+│   │   └── maritime_clean.csv
+│   ├── Dockerfile
+│   ├── exports
+│   │   ├── correlations_annulation_split.png
+│   │   ├── correlations_annulation_split3.png
+│   │   ├── correlations_annulation.png
+│   │   ├── matrice_de_correlations.png
+│   │   └── matrice_top_15.png
+│   ├── img
+│   │   ├── rose_des_vents.gif
+│   │   ├── sinus-cosinus-cercle-normal.webp
+│   │   ├── trig.gif
+│   │   ├── trig.PNG
+│   │   ├── trig2.png
+│   │   └── trigo.PNG
+│   ├── notebooks
+│   │   ├── 01_cleaning.ipynb
+│   │   ├── 02_ligne_selector.ipynb
+│   │   ├── 03_processing_v0.ipynb
+│   │   ├── 03_processing_v1.ipynb
+│   │   ├── 04_model_comparison.ipynb
+│   │   └── cleanning_old.ipynb
+│   ├── README.md
+│   └── src
+│       ├── cleaning_utils.py
+│       ├── cleaning.py
+│       ├── features_v1.py
+│       ├── inspect_maritime.py
+│       ├── ligne_selector.py
+│       ├── paths.py
+│       ├── preprocessing_utils.py
+│       ├── preprocessing.py
+│       ├── retrain_old.py
+│       └── train_v1.py
+├── v2_meteo
+│   ├── artifacts
+│   │   ├── metrics_v2.json
+│   │   └── model_v2.pkl
+│   ├── data
+│   │   ├── processed
+│   │   │   ├── consolidated_2024_01_01-au-2026_04_30.parquet
+│   │   │   ├── test.parquet
+│   │   │   ├── train.parquet
+│   │   │   ├── training_merged_meteo_only.parquet
+│   │   │   └── val.parquet
+│   │   └── raw
+│   │       ├── meteo_2024_01_01-au-01_31.csv
+│   │       ├── meteo_2024_02_01-au-02_29.csv
+│   │       ├── meteo_2024_03_01-au-03_31.csv
+│   │       ├── meteo_2024_04_01-au-04_30.csv
+│   │       ├── meteo_2024_05_01-au-05_31.csv
+│   │       ├── meteo_2024_06_01-au-06_30.csv
+│   │       ├── meteo_2024_07_01-au-07_31.csv
+│   │       ├── meteo_2024_08_01-au-08_31.csv
+│   │       ├── meteo_2024_09_01-au-09_30.csv
+│   │       ├── meteo_2024_10_01-au-10_31.csv
+│   │       ├── meteo_2024_11_01-au-11_30.csv
+│   │       ├── meteo_2024_12_01-au-12_31.csv
+│   │       ├── meteo_2025_01_01-au-01_31.csv
+│   │       ├── meteo_2025_02_01-au-02_28.csv
+│   │       ├── meteo_2025_03_01-au-03_31.csv
+│   │       ├── meteo_2025_04_01-au-04_30.csv
+│   │       ├── meteo_2025_05_01-au-05_31.csv
+│   │       ├── meteo_2025_06_01-au-06_30.csv
+│   │       ├── meteo_2025_07_01-au-07_31.csv
+│   │       ├── meteo_2025_08_01-au-08_31.csv
+│   │       ├── meteo_2025_09_01-au-09_30.csv
+│   │       ├── meteo_2025_10_01-au-10_31.csv
+│   │       ├── meteo_2025_11_01-au-11_30.csv
+│   │       ├── meteo_2025_12_01-au-12_31.csv
+│   │       ├── meteo_2026_01_01-au-01_31.csv
+│   │       ├── meteo_2026_02_01-au-02_28.csv
+│   │       ├── meteo_2026_03_01-au-03_31.csv
+│   │       └── meteo_2026_04_01-au-04_30.csv
+│   ├── docker-compose.yml
+│   ├── documentation
+│   │   ├── DOCKER_EXPLIQUE.md
+│   │   ├── DOCKER.md
+│   │   ├── README_ML.md
+│   │   ├── STRUCTURE.md
+│   │   └── UTILS_EXPLIQUE.md
+│   ├── LICENCE
+│   ├── main.py
+│   ├── Makefile
+│   ├── open_meteo_ml.egg-info
+│   │   ├── dependency_links.txt
+│   │   ├── PKG-INFO
+│   │   ├── requires.txt
+│   │   ├── SOURCES.txt
+│   │   └── top_level.txt
+│   ├── ORCHESTRATION.md
+│   ├── README.md
+│   └── src
+│       ├── __init__.py
+│       ├── collect.py
+│       ├── consolidate.py
+│       ├── eda_utils.py
+│       ├── features_v2.py
+│       ├── inspect_openmeteo.py
+│       ├── model_utils.py
+│       ├── open_meteo
+│       │   └── artifacts
+│       ├── pipeline.py
+│       ├── split.py
+│       ├── train_v2.py
+│       └── utils.py
+└── v3_hybride
+    ├── __init__.py
+    ├── artifacts
+    │   ├── metrics_v3.json
+    │   └── model_v3.pkl
+    ├── data
+    │   └── processed
+    │       └── training_merged_v3.parquet
+    ├── README.md
+    └── src
+        ├── __init__.py
+        ├── features_v3.py
+        └── train_v3.py
+
+31 directories, 139 files

@@ -1,0 +1,24 @@
+{
+    "accuracy": 0.8055555555555556,
+    "precision": 0.7926829268292683,
+    "recall": 0.8552631578947368,
+    "f1": 0.8227848101265823,
+    "n_features": 13,
+    "feature_names": [
+        "wave_height_max",
+        "wave_direction_dominant",
+        "wave_period_max",
+        "wind_wave_height_max",
+        "swell_wave_height_max",
+        "temperature_max",
+        "temperature_min",
+        "wind_speed_max",
+        "wind_gusts_max",
+        "wave_to_swell_ratio",
+        "total_wave_energy",
+        "wind_to_wave_ratio",
+        "temp_range"
+    ],
+    "trained_at": "2026-05-15T02:21:08.290049",
+    "model_type": "RandomForest_V2_MeteoOnly"
+}

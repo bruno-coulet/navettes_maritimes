@@ -2,7 +2,7 @@
 
 Dossier parent qui regroupe les 3 repos du projet :
 
-- `meteo_marine/` : collecte et préparation des données météo
+- `open_meteo/` : collecte et préparation des données météo
 - `maritime/` : entraînement du modèle d'annulation
 - `navettes/` : API de prédiction
 - `docker-compose.orchestration.yml` : orchestration complète collecte → entraînement → prédiction
@@ -11,7 +11,7 @@ Dossier parent qui regroupe les 3 repos du projet :
 
 ```text
 ~/projets/navettes_maritimes/
-  ├─ meteo_marine/
+  ├─ open_meteo/
   ├── maritime/
   ├── navettes/
   ├── front_app/
@@ -28,7 +28,7 @@ docker-compose -f docker-compose.orchestration.yml up --build
 ```
 
 Services exposés :
-- collecte : service interne `meteo_marine_collect`
+- collecte : service interne `open_meteo_collect`
 - entraînement : service interne `maritime_model`
 - API : `http://localhost:8000`
 
@@ -39,7 +39,7 @@ Services exposés :
 
 Projet de **prédiction d'annulation de navettes maritimes** basé sur :
 
-1. **Collecte de données météo** (`meteo_marine/`)
+1. **Collecte de données météo** (`open_meteo/`)
 2. **Entraînement d'un modèle de ML** (`maritime/`)
 3. **Inférence et prédiction en temps réel** (`navettes/`)
 
@@ -98,7 +98,7 @@ FEATURES_PATH=./data/artifacts/features.json
 Chaque service possède également un fichier `.env.example` local :
 - `maritime/.env.example` : variables relatives au traitement des données maritimes
 - `navettes/.env.example` : variables relatives à l'API de prédiction
-- `meteo_marine/.env.example` : variables proxy pour la collecte météo
+- `open_meteo/.env.example` : variables proxy pour la collecte météo
 - `front_app/.env.example` : URL publique de l'API et port Streamlit
 
 Un développeur peut créer des fichiers `.env` locaux pour chaque service s'il souhaite des surcharges spécifiques.
@@ -109,7 +109,7 @@ Pour un déploiement exposé par Traefik, utilisez plutôt les Dockerfiles racin
 - `Dockerfile.api` pour le backend FastAPI
 - `Dockerfile.front` pour le frontend Streamlit
 
-Les Dockerfiles historiques dans `meteo_marine/` et `maritime/` restent utiles pour la pipeline de collecte et d'entraînement, mais ils ne sont pas nécessaires pour le front de production.
+Les Dockerfiles historiques dans `open_meteo/` et `maritime/` restent utiles pour la pipeline de collecte et d'entraînement, mais ils ne sont pas nécessaires pour le front de production.
 
 Le fichier `docker-compose.orchestration.yml` garde le rôle de pipeline interne collecte → entraînement → prédiction. Pour le VPS, il est préférable d'avoir un compose séparé, par exemple `docker-compose.vps.yml`, afin de ne pas mélanger les dépendances de build avec les labels Traefik et les routes publiques.
 
@@ -133,7 +133,7 @@ docker-compose -f docker-compose.orchestration.yml up --build
 navettes_maritimes/
 ├── .env                # Configuration centralisée (À CRÉER depuis .env.example)
 ├── .env.example        # Template de configuration
-├── meteo_marine/
+├── open_meteo/
 │   ├── .env.example    # Exemple de variables locales (optionnel)
 │   ├── src/
 │   ├── data/
@@ -166,7 +166,7 @@ navettes_maritimes/
 
 Chaque service peut être développé indépendamment :
 
-1. **meteo_marine** : récupère les données météo (voir `meteo_marine/README.md`)
+1. **open_meteo** : récupère les données météo (voir `open_meteo/README.md`)
 2. **maritime** : entraîne et exporte le modèle (voir `maritime/README.md`)
 3. **navettes** : expose une API de prédiction (voir `navettes/README.md`)
 
@@ -186,5 +186,5 @@ Si vous souhaitez une configuration locale différente pour un service, créez u
 
 ## 🤝 Contact
 
-Bruno Coulet - [bcoulet@rtm.fr](mailto:bcoulet@rtm.fr)  
+Bruno Coulet - [bruno.coulet@laplateforme.io](mailto:bruno.coulet@laplateforme.io)  
 [GitHub](https://github.com/bruno-coulet)
