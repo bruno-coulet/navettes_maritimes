@@ -3,18 +3,13 @@
 ├── compare_versions.py
 ├── docker-compose.orchestration.yml
 ├── docker-compose.vps.yml
-├── generate_structure.py
-├── open_meteo_ml.egg-info
-│   ├── dependency_links.txt
-│   ├── PKG-INFO
-│   ├── requires.txt
-│   ├── SOURCES.txt
-│   └── top_level.txt
 ├── predict
 │   ├── api
 │   │   └── src
 │   │       ├── main.py
-│   │       └── meteo.py
+│   │       ├── meteo.py
+│   │       ├── metrics_v3.json
+│   │       └── model_v3.pkl
 │   ├── docker-compose.yml
 │   ├── Dockerfile
 │   ├── front
@@ -27,23 +22,15 @@
 │   └── README.md
 ├── promote_model.py
 ├── pyproject.toml
-├── README_OLD.md
 ├── README.md
 ├── REPORT_FINAL.md
 ├── structure_projet.txt
 ├── uv.lock
 ├── v1_baseline
+│   ├── __init__
 │   ├── artifacts
 │   │   ├── metrics_v1.json
-│   │   ├── model_v1.pkl
-│   │   ├── preprocessing
-│   │   │   └── maritime_clean
-│   │   │       ├── metadata.json
-│   │   │       ├── preprocessed_numeric.csv
-│   │   │       ├── preprocessed_reduced.csv
-│   │   │       └── preprocessed.csv
-│   │   └── run_v1_20260515_020113
-│   │       └── metrics_v1.json
+│   │   └── model_v1.pkl
 │   ├── data
 │   │   ├── consolidation_maritime.xlsx
 │   │   ├── lignes
@@ -94,40 +81,40 @@
 │   │   └── model_v2.pkl
 │   ├── data
 │   │   ├── processed
-│   │   │   ├── consolidated_2024_01_01-au-2026_04_30.parquet
-│   │   │   ├── test.parquet
-│   │   │   ├── train.parquet
-│   │   │   ├── training_merged_meteo_only.parquet
-│   │   │   └── val.parquet
+│   │   │   ├── consolidated_2024_01_01-au-04_30.parquet
+│   │   │   └── training_merged_meteo.parquet
 │   │   └── raw
-│   │       ├── meteo_2024_01_01-au-01_31.csv
-│   │       ├── meteo_2024_02_01-au-02_29.csv
-│   │       ├── meteo_2024_03_01-au-03_31.csv
-│   │       ├── meteo_2024_04_01-au-04_30.csv
-│   │       ├── meteo_2024_05_01-au-05_31.csv
-│   │       ├── meteo_2024_06_01-au-06_30.csv
-│   │       ├── meteo_2024_07_01-au-07_31.csv
-│   │       ├── meteo_2024_08_01-au-08_31.csv
-│   │       ├── meteo_2024_09_01-au-09_30.csv
-│   │       ├── meteo_2024_10_01-au-10_31.csv
-│   │       ├── meteo_2024_11_01-au-11_30.csv
-│   │       ├── meteo_2024_12_01-au-12_31.csv
-│   │       ├── meteo_2025_01_01-au-01_31.csv
-│   │       ├── meteo_2025_02_01-au-02_28.csv
-│   │       ├── meteo_2025_03_01-au-03_31.csv
-│   │       ├── meteo_2025_04_01-au-04_30.csv
-│   │       ├── meteo_2025_05_01-au-05_31.csv
-│   │       ├── meteo_2025_06_01-au-06_30.csv
-│   │       ├── meteo_2025_07_01-au-07_31.csv
-│   │       ├── meteo_2025_08_01-au-08_31.csv
-│   │       ├── meteo_2025_09_01-au-09_30.csv
-│   │       ├── meteo_2025_10_01-au-10_31.csv
-│   │       ├── meteo_2025_11_01-au-11_30.csv
-│   │       ├── meteo_2025_12_01-au-12_31.csv
-│   │       ├── meteo_2026_01_01-au-01_31.csv
-│   │       ├── meteo_2026_02_01-au-02_28.csv
-│   │       ├── meteo_2026_03_01-au-03_31.csv
-│   │       └── meteo_2026_04_01-au-04_30.csv
+│   │       ├── 2024
+│   │       │   ├── meteo_2024_01_01-au-01_31.csv
+│   │       │   ├── meteo_2024_02_01-au-02_29.csv
+│   │       │   ├── meteo_2024_03_01-au-03_31.csv
+│   │       │   ├── meteo_2024_04_01-au-04_30.csv
+│   │       │   ├── meteo_2024_05_01-au-05_31.csv
+│   │       │   ├── meteo_2024_06_01-au-06_30.csv
+│   │       │   ├── meteo_2024_07_01-au-07_31.csv
+│   │       │   ├── meteo_2024_08_01-au-08_31.csv
+│   │       │   ├── meteo_2024_09_01-au-09_30.csv
+│   │       │   ├── meteo_2024_10_01-au-10_31.csv
+│   │       │   ├── meteo_2024_11_01-au-11_30.csv
+│   │       │   └── meteo_2024_12_01-au-12_31.csv
+│   │       ├── 2025
+│   │       │   ├── meteo_2025_01_01-au-01_31.csv
+│   │       │   ├── meteo_2025_02_01-au-02_28.csv
+│   │       │   ├── meteo_2025_03_01-au-03_31.csv
+│   │       │   ├── meteo_2025_04_01-au-04_30.csv
+│   │       │   ├── meteo_2025_05_01-au-05_31.csv
+│   │       │   ├── meteo_2025_06_01-au-06_30.csv
+│   │       │   ├── meteo_2025_07_01-au-07_31.csv
+│   │       │   ├── meteo_2025_08_01-au-08_31.csv
+│   │       │   ├── meteo_2025_09_01-au-09_30.csv
+│   │       │   ├── meteo_2025_10_01-au-10_31.csv
+│   │       │   ├── meteo_2025_11_01-au-11_30.csv
+│   │       │   └── meteo_2025_12_01-au-12_31.csv
+│   │       └── 2026
+│   │           ├── meteo_2026_01_01-au-01_31.csv
+│   │           ├── meteo_2026_02_01-au-02_28.csv
+│   │           ├── meteo_2026_03_01-au-03_31.csv
+│   │           └── meteo_2026_04_01-au-04_30.csv
 │   ├── docker-compose.yml
 │   ├── documentation
 │   │   ├── DOCKER_EXPLIQUE.md
@@ -138,25 +125,18 @@
 │   ├── LICENCE
 │   ├── main.py
 │   ├── Makefile
-│   ├── open_meteo_ml.egg-info
-│   │   ├── dependency_links.txt
-│   │   ├── PKG-INFO
-│   │   ├── requires.txt
-│   │   ├── SOURCES.txt
-│   │   └── top_level.txt
 │   ├── ORCHESTRATION.md
 │   ├── README.md
 │   └── src
 │       ├── __init__.py
-│       ├── collect.py
-│       ├── consolidate.py
+│       ├── a_collect_meteo.py
+│       ├── b_consolidate.py
+│       ├── c_features_v2.py
+│       ├── d_train_v2.py
 │       ├── eda_utils.py
-│       ├── features_v2.py
 │       ├── inspect_openmeteo.py
 │       ├── model_utils.py
 │       ├── pipeline.py
-│       ├── split.py
-│       ├── train_v2.py
 │       └── utils.py
 └── v3_hybride
     ├── __init__.py
@@ -172,4 +152,4 @@
         ├── features_v3.py
         └── train_v3.py
 
-31 directories, 142 files
+29 directories, 124 files
