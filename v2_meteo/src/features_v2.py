@@ -1,27 +1,51 @@
 """
+Traitement des features V2 et fusion des registres maritimes et météo.
 
-anciennemnt nommé "merge_maritime_open_meteo.py
+Responsabilité:
+- Charger l'historique d'exploitation maritime brut (V1)
+  sans les variables météo déclarative de l'exploitation.
+- Agréger les données à la maille quotidienne (correction du biais statistique 'mean')
+- Charger dynamiquement l'historique Open-Meteo consolidé (Parquet)
+  maille quotidienne, perd la granularité fine, mais nettoie le bruit statistique
+- Fusionner les deux univers sur la clé temporelle (Date)
+- Générer la cible binaire finale basée sur le seuil métier de 16.6%
 
-Recalculer le merge avec Annulation='mean' au lieu de 'max'
+Entrées:
+- v1_baseline/data/maritime_clean.csv
+- v2_meteo/data/processed/consolidated_*.parquet (Détection dynamique)
 
-Cela donne la vraie distribution quotidienne :
-- Si un jour a 80 traversées et 13 annulations → AnnulationMean = 13/80 = 16.25%
-- Cela reste comparable à v1 (16.6%)
+Sorties:
+- v2_meteo/data/processed/training_merged_meteo.parquet
+
+Commande:
+- `uv run python -m v2_meteo.src.features_v2`
+
+Commande précédente (pour générer le fichier consolidé nécessaire):
+- `uv run python -m v2_meteo.src.consolidate`
+
+Commande suivante (pour entrainer le modele avec ce nouveau fichier):
+- `uv run python -m v2_meteo.src.train_v2`
+
 """
 
 import pandas as pd
 from pathlib import Path
 
 print("="*70)
-print("RECALCUL : Merge avec Annulation='mean' (distribution réelle)")
+print("CALCUL : Merge avec Annulation='mean' (distribution réelle)")
 print("="*70)
 
-# Charger données brutes Maritime
-maritime_df = pd.read_csv("maritime/data/maritime_clean.csv")
+# Charger données brutes Maritime, ROOT est 3 niveau au dessus de __file__
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+v2_meteo = Path(__file__).resolve().parents[1]
+maritime_path = PROJECT_ROOT / "v1_baseline" / "data" / "maritime_clean.csv"
+
+maritime_df = pd.read_csv(maritime_path)
 maritime_df['Horaire'] = pd.to_datetime(maritime_df['Horaire'])
 maritime_df['Date'] = maritime_df['Horaire'].dt.date
 
-print("\n[1] Agrégation quotidienne de Maritime avec mean()")
+print("\nAgrégation quotidienne de Maritime avec mean()")
+
 daily_mean = maritime_df.groupby('Date').agg({
     'Annulation': ['count', 'sum', 'mean'],
     'Ligne': 'first',
@@ -48,9 +72,20 @@ print(f"% annulations (moyenne) : {daily_mean['AnnulationPct'].mean()*100:.1f}%"
 print(f"Écart-type : {daily_mean['AnnulationPct'].std()*100:.1f}%")
 print(f"Min/Max : {daily_mean['AnnulationPct'].min()*100:.1f}% - {daily_mean['AnnulationPct'].max()*100:.1f}%")
 
-print("\n[2] Charger open_meteo et merger")
-# Charger open_meteo
-openmeteo_df = pd.read_parquet("meteo_marine/data/processed/consolidated_2024_01_01-au-2026_04_30.parquet")
+print("\nCharger open_meteo et merger")
+# Charger dynamiquement le fichier open_meteo consolidé
+# lister tous les fichiers qui commencent par consolidated_ et finissent par .parquet
+consolidated_files = list((v2_meteo / "data" / "processed").glob("consolidated_*.parquet"))
+if not consolidated_files:
+    raise FileNotFoundError(
+        f"Aucun fichier consolidé trouvé dans {v2_meteo / 'data' / 'processed'}. "
+        "Exécutez d'abord le script consolidate.py."
+    )
+# Prend le 1er fichier (le seul le plus récent)
+consolidated_file = consolidated_files[0]
+print(f"Fichier consolidé trouvé : {consolidated_file.name}")
+
+openmeteo_df = pd.read_parquet(consolidated_file)
 openmeteo_df['date'] = pd.to_datetime(openmeteo_df['date'])
 
 # Filter sur intersection
@@ -85,14 +120,21 @@ merged['Annulation_binary'] = (merged['AnnulationPct'] >= 0.166).astype(int)
 print(f"\nAvec threshold 16.6% : {merged['Annulation_binary'].mean()*100:.1f}% annulations")
 
 # Sauvegarder
-output_path = "meteo_marine/data/processed/training_merged.parquet"
+v2_meteo = Path(__file__).resolve().parents[1]
+output_path = v2_meteo / "data" / "processed" / "training_merged_meteo.parquet"
+
+merged.to_parquet(output_path, index=False)
+print(f"\n✓ Sauvegardé : {output_path}")
+
+
+
 merged.to_parquet(output_path, index=False)
 print(f"\n✓ Sauvegardé : {output_path}")
 print(f"  Shape : {merged.shape}")
 print(f"  Colonnes : {list(merged.columns)}")
 
 print("\n" + "="*70)
-print("RÉSUMÉ CORRECTIONNEÉ")
+print("RÉSUMÉ")
 print("="*70)
 print(f"""
 Distribution d'annulation :

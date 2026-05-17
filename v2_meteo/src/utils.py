@@ -1,7 +1,7 @@
 """Utilitaires de collecte et traitement des donnees meteo marine.
 
 Responsabilite:
-- recuperer les donnees quotidiennes via open_meteo
+- recuperer les donnees quotidiennes via open-meteo
 - construire des summaries journaliers exploitables pour le ML
 
 Entrees:
@@ -22,29 +22,23 @@ Utilitaires pour la collecte et traitement des données météo marine de Marsei
 Ce module collecte les données quotidiennes de météo marine via des APIs publiques.
 
 Sources de données:
-1. open_meteo Marine API (UTILISÉ ✅)
+1. open-meteo Marine API
    - Vagues: hauteur, direction, période
    - Houle vs vagues de vent
-   - URL: https://marine-api.open_meteo.com/v1/marine
+   - URL: https://marine-api.open-meteo.com/v1/marine
    - Avantages: Gratuit, pas d'auth, fiable
 
-2. open_meteo ERA5 Archive (UTILISÉ ✅)
+2. open-meteo ERA5 Archive
    - Température, vent, pression, humidité
    - Données de réanalyse (historique fiable)
-   - URL: https://archive-api.open_meteo.com/v1/era5
+   - URL: https://archive-api.open-meteo.com/v1/archive
    - Avantages: Gratuit, pas d'auth, complet
-
-3. Météo-France API (NON UTILISÉ ❌)
-   - Bulletins BMS (Bulletins Météo Marine)
-   - Payant, authentification requise
-   - Endpoints: Non documentés/instables
-   - Status: Code legacy conservé pour référence
 
 === FLUX DE DONNÉES ===
 
 1. collect_historical_data_batch()
-   ├─ get_marine_weather_open_meteo() → Vagues
-   └─ get_weather_data_open_meteo() → Météo générale
+   ├─ get_marine_weather_open-meteo() → Vagues
+   └─ get_weather_data_open-meteo() → Météo générale
 
 2. process_to_daily_summary()
    └─ Fusionne marine_data + weather_data
@@ -82,7 +76,7 @@ class MeteoMarineMarseille:
         timeout: int = 30,
         force_proxy: bool | None = False,
     ):
-        self.open_meteo_base = "https://marine-api.open_meteo.com/v1"
+        self.open_meteo_base = "https://marine-api.open-meteo.com/v1"
 
         # Coordonnées de Marseille
         self.marseille_coords = {"lat": 43.2965, "lon": 5.3698}
@@ -221,50 +215,85 @@ class MeteoMarineMarseille:
 
         return values
 
-    def _request_json(self, url, params, source_name):
-        # --- CORRECTION IMAC : BYPASS DNS ---
-        # On remplace les noms de domaine par l'IP directe (trouvée via nslookup)
-        ip_openmeteo = "152.53.84.73"
-        target_url = url.replace("marine-api.open-meteo.com", ip_openmeteo)
-        target_url = target_url.replace("archive-api.open-meteo.com", ip_openmeteo)
+    # def _request_json(self, url, params, source_name):
+        
+    #     # 1. Détermine le bon Host d'origine avant de le remplacer
+    #     original_host = "marine-api.open-meteo.com" if "marine" in url else "archive-api.open-meteo.com"
 
-        """Exécute un appel open_meteo en appliquant la configuration proxy si présente."""
+    #     # --- CORRECTION IMAC : BYPASS DNS ---
+    #     # On remplace les noms de domaine par l'IP directe (trouvée via nslookup)
+    #     ip_openmeteo = "152.53.84.73"
+    #     target_url = url.replace("marine-api.open-meteo.com", ip_openmeteo)
+    #     target_url = target_url.replace("archive-api.open-meteo.com", ip_openmeteo)
+
+    #     # 2. Injecte le Host d'origine dans les headers pour guider le serveur Open-Meteo
+    #     headers = {
+    #         "Host": original_host
+    #     }
+
+    #     """Exécute un appel open-meteo en appliquant la configuration proxy si présente."""
+    #     request_kwargs = {
+    #         "params": params,
+    #         "headers": headers,  # Injecte le Host d'origine
+    #         "timeout": self.request_timeout,
+    #         "proxies": {},  # Par défaut, pas de proxy
+    #         "verify": False  # Obligatoire car le certificat SSL ne correspondra pas à l'IP
+    #     }
+
+    #     # COMMENTER TEMORAIREMENT POU DEBUG SUR IMAC PERSONNEL SANS PROXY
+    #     #  if self.proxies:
+    #     #     request_kwargs["proxies"] = self.proxies
+
+    #     try:
+    #         # Désactive les warnings SSL liés à l'usage de l'IP
+    #         import urllib3
+    #         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    #         response = self.session.get(target_url, **request_kwargs)
+    #         response.raise_for_status()
+
+    #         # Log de contrôle pour voir la taille de la réponse en direct
+    #         data = response.json()
+    #         # if "daily" in data:
+    #         #     print(f"  [API {source_name}] Clés reçues : {list(data['daily'].keys())}")
+    #         return data
+
+
+    #     except requests.exceptions.RequestException as e:
+    #         proxy_state = "avec proxy configuré" if self.proxies else "sans proxy configuré"
+    #         print(f"Erreur requete open-meteo {source_name} ({proxy_state}): {e}")
+    #         # return None
+    #         raise e  # Propage l'exception pour que le test de connectivité puisse la gérer
+
+    def _request_json(self, url, params, source_name):
+        """Exécute un appel open-meteo en appliquant la configuration proxy si présente."""
+        import requests
+
         request_kwargs = {
             "params": params,
-            "timeout": self.request_timeout,
-            "proxies": {},  # Par défaut, pas de proxy
-            "verify": False  # Obligatoire car le certificat SSL ne correspondra pas à l'IP
+            "timeout": getattr(self, 'request_timeout', 15),
+            "proxies": getattr(self, 'proxies', {})
         }
 
-        # COMMENTER TEMORAIREMENT POU DEBUG SUR IMAC PERSONNEL SANS PROXY
-        #  if self.proxies:
-        #     request_kwargs["proxies"] = self.proxies
-
         try:
-            # Désactive les warnings SSL liés à l'usage de l'IP
-            import urllib3
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-            response = self.session.get(target_url, **request_kwargs)
+            # On appelle directement l'URL officielle (sans bypass IP)
+            response = requests.get(url, **request_kwargs)
             response.raise_for_status()
             return response.json()
-        # try:
-        #     response = self.session.get(url, **request_kwargs)
-        #     response.raise_for_status()
-        #     return response.json()
 
         except requests.exceptions.RequestException as e:
-            proxy_state = "avec proxy configuré" if self.proxies else "sans proxy configuré"
-            print(f"Erreur open_meteo {source_name} ({proxy_state}): {e}")
+            proxy_state = "avec proxy" if getattr(self, 'proxies', None) else "sans proxy"
+            print(f"💥 ERREUR open-meteo {source_name} ({proxy_state}): {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"Détail : {e.response.text}")
             return None
 
     # =====================================================================
-    # open_meteo MARINE API (Vagues, houle)
+    # open-meteo MARINE API (Vagues, houle)
     # =====================================================================
-
     def get_marine_weather_open_meteo(self, start_date, end_date):
         """
-        [open_meteo MARINE] Récupère les données de vagues
+        [open-meteo MARINE] Récupère les données de vagues
         UTILISÉ dans: collect_historical_data_batch()
 
         Données retournées:
@@ -303,12 +332,11 @@ class MeteoMarineMarseille:
         return self._request_json(url, params, "marine")
 
     # =====================================================================
-    # open_meteo ERA5 API (Météo générale)
+    # open-meteo ERA5 API (Météo générale)
     # =====================================================================
-
     def get_weather_data_open_meteo(self, start_date, end_date):
         """
-        [open_meteo ERA5] Récupère les données de météo générale
+        [open-meteo ERA5] Récupère les données de météo générale
         UTILISÉ dans: collect_historical_data_batch()
 
         Données retournées:
@@ -317,7 +345,7 @@ class MeteoMarineMarseille:
         - Pression, humidité, couverture nuageuse
         - Source: Données de réanalyse (fiables et historiques)
         """
-        url = "https://archive-api.open_meteo.com/v1/era5"
+        url = "https://archive-api.open-meteo.com/v1/archive"
 
         params = {
             "latitude": self.marseille_coords["lat"],
@@ -352,12 +380,12 @@ class MeteoMarineMarseille:
 
     def collect_historical_data_batch(self, start_date, end_date, batch_days=30):
         """
-        Collecte les données par lots via les 2 APIs open_meteo
+        Collecte les données par lots via les 2 APIs open-meteo
         ✅ UTILISÉ dans: src.pipeline
 
         Processus:
-        1. Appelle get_marine_weather_open_meteo() → données de vagues
-        2. Appelle get_weather_data_open_meteo() → données météo générale
+        1. Appelle get_marine_weather_open-meteo() → données de vagues
+        2. Appelle get_weather_data_open-meteo() → données météo générale
         3. Regroupe par lots de 30 jours (évite timeouts)
         4. Pause 2 sec entre les lots (respecte les limites API)
 
@@ -377,10 +405,10 @@ class MeteoMarineMarseille:
                 f"Traitement du lot: {current_start.strftime('%Y-%m-%d')} à {current_end.strftime('%Y-%m-%d')}"
             )
 
-            # Données marine via open_meteo
+            # Données marine via open-meteo
             marine_data = self.get_marine_weather_open_meteo(current_start, current_end)
 
-            # Données météo générales via open_meteo
+            # Données météo générales via open-meteo
             weather_data = self.get_weather_data_open_meteo(current_start, current_end)
 
             if marine_data or weather_data:
@@ -398,124 +426,246 @@ class MeteoMarineMarseille:
 
         return all_data
 
+    # def process_to_daily_summary(self, batch_data_list):
+    #     """
+    #     Fusionne et traite les données en résumé quotidien
+    #     UTILISÉ dans: src.pipeline
+
+    #     Processus:
+    #     1. Extrait données quotidiennes marines et météo
+    #     2. Fusionne par date (inner join sur la date)
+    #     3. Gère les valeurs manquantes (None)
+    #     4. Retourne DataFrame pandas prêt pour sauvegarde/ML
+    #     """
+    #     daily_records = []
+
+    #     for batch in batch_data_list:
+    #         marine_data = batch.get("marine_data", {})
+    #         weather_data = batch.get("weather_data", {})
+
+    #         # Traitement des données quotidiennes marines
+    #         if marine_data and "daily" in marine_data:
+    #             daily_marine = marine_data["daily"]
+    #             dates = daily_marine.get("time", [])
+
+    #             for i, date_str in enumerate(dates):
+    #                 try:
+    #                     record = {
+    #                         "date": date_str,
+    #                         "wave_height_max": (
+    #                             daily_marine.get("wave_height_max", [None])[i]
+    #                             if i < len(daily_marine.get("wave_height_max", []))
+    #                             else None
+    #                         ),
+    #                         "wave_direction_dominant": (
+    #                             daily_marine.get("wave_direction_dominant", [None])[i]
+    #                             if i < len(daily_marine.get("wave_direction_dominant", []))
+    #                             else None
+    #                         ),
+    #                         "wave_period_max": (
+    #                             daily_marine.get("wave_period_max", [None])[i]
+    #                             if i < len(daily_marine.get("wave_period_max", []))
+    #                             else None
+    #                         ),
+    #                         "wind_wave_height_max": (
+    #                             daily_marine.get("wind_wave_height_max", [None])[i]
+    #                             if i < len(daily_marine.get("wind_wave_height_max", []))
+    #                             else None
+    #                         ),
+    #                         "swell_wave_height_max": (
+    #                             daily_marine.get("swell_wave_height_max", [None])[i]
+    #                             if i < len(daily_marine.get("swell_wave_height_max", []))
+    #                             else None
+    #                         ),
+    #                     }
+
+    #                     # Ajout des données météo si disponibles
+    #                     if weather_data and "daily" in weather_data:
+    #                         daily_weather = weather_data["daily"]
+    #                         weather_dates = daily_weather.get("time", [])
+
+    #                         if date_str in weather_dates:
+    #                             weather_idx = weather_dates.index(date_str)
+    #                             record.update(
+    #                                 {
+    #                                     "temperature_max": (
+    #                                         daily_weather.get("temperature_2m_max", [None])[
+    #                                             weather_idx
+    #                                         ]
+    #                                         if weather_idx
+    #                                         < len(daily_weather.get("temperature_2m_max", []))
+    #                                         else None
+    #                                     ),
+    #                                     "temperature_min": (
+    #                                         daily_weather.get("temperature_2m_min", [None])[
+    #                                             weather_idx
+    #                                         ]
+    #                                         if weather_idx
+    #                                         < len(daily_weather.get("temperature_2m_min", []))
+    #                                         else None
+    #                                     ),
+    #                                     "wind_speed_max": (
+    #                                         daily_weather.get("wind_speed_10m_max", [None])[
+    #                                             weather_idx
+    #                                         ]
+    #                                         if weather_idx
+    #                                         < len(daily_weather.get("wind_speed_10m_max", []))
+    #                                         else None
+    #                                     ),
+    #                                     "wind_gusts_max": (
+    #                                         daily_weather.get("wind_gusts_10m_max", [None])[
+    #                                             weather_idx
+    #                                         ]
+    #                                         if weather_idx
+    #                                         < len(daily_weather.get("wind_gusts_10m_max", []))
+    #                                         else None
+    #                                     ),
+    #                                     "wind_direction_dominant": (
+    #                                         daily_weather.get("wind_direction_10m_dominant", [None])[
+    #                                             weather_idx
+    #                                         ]
+    #                                         if weather_idx
+    #                                         < len(
+    #                                             daily_weather.get("wind_direction_10m_dominant", [])
+    #                                         )
+    #                                         else None
+    #                                     ),
+    #                                 }
+    #                             )
+
+    #                     daily_records.append(record)
+
+    #                 except (IndexError, ValueError) as e:
+    #                     print(f"Erreur traitement date {date_str}: {e}")
+    #                     continue
+
+    #     return pd.DataFrame(daily_records)
+
     def process_to_daily_summary(self, batch_data_list):
-        """
-        Fusionne et traite les données en résumé quotidien
-        ✅ UTILISÉ dans: src.pipeline
+            """
+            Fusionne et traite les données en résumé quotidien
+            UTILISÉ dans: src.pipeline
 
-        Processus:
-        1. Extrait données quotidiennes marines et météo
-        2. Fusionne par date (inner join sur la date)
-        3. Gère les valeurs manquantes (None)
-        4. Retourne DataFrame pandas prêt pour sauvegarde/ML
-        """
-        daily_records = []
+            Processus:
+            1. Extrait données quotidiennes marines et météo
+            2. Fusionne par date (inner join sur la date nettoyée YYYY-MM-DD)
+            3. Gère les valeurs manquantes (None)
+            4. Retourne DataFrame pandas prêt pour sauvegarde/ML
+            """
+            daily_records = []
 
-        for batch in batch_data_list:
-            marine_data = batch.get("marine_data", {})
-            weather_data = batch.get("weather_data", {})
+            for batch in batch_data_list:
+                marine_data = batch.get("marine_data", {})
+                weather_data = batch.get("weather_data", {})
 
-            # Traitement des données quotidiennes marines
-            if marine_data and "daily" in marine_data:
-                daily_marine = marine_data["daily"]
-                dates = daily_marine.get("time", [])
+                # Traitement des données quotidiennes marines
+                if marine_data and "daily" in marine_data:
+                    daily_marine = marine_data["daily"]
+                    dates = daily_marine.get("time", [])
 
-                for i, date_str in enumerate(dates):
-                    try:
-                        record = {
-                            "date": date_str,
-                            "wave_height_max": (
-                                daily_marine.get("wave_height_max", [None])[i]
-                                if i < len(daily_marine.get("wave_height_max", []))
-                                else None
-                            ),
-                            "wave_direction_dominant": (
-                                daily_marine.get("wave_direction_dominant", [None])[i]
-                                if i < len(daily_marine.get("wave_direction_dominant", []))
-                                else None
-                            ),
-                            "wave_period_max": (
-                                daily_marine.get("wave_period_max", [None])[i]
-                                if i < len(daily_marine.get("wave_period_max", []))
-                                else None
-                            ),
-                            "wind_wave_height_max": (
-                                daily_marine.get("wind_wave_height_max", [None])[i]
-                                if i < len(daily_marine.get("wind_wave_height_max", []))
-                                else None
-                            ),
-                            "swell_wave_height_max": (
-                                daily_marine.get("swell_wave_height_max", [None])[i]
-                                if i < len(daily_marine.get("swell_wave_height_max", []))
-                                else None
-                            ),
-                        }
+                    for i, date_str in enumerate(dates):
+                        try:
+                            # 1. Construction du bloc de base (Marine)
+                            record = {
+                                "date": date_str,
+                                "wave_height_max": (
+                                    daily_marine.get("wave_height_max", [None])[i]
+                                    if i < len(daily_marine.get("wave_height_max", []))
+                                    else None
+                                ),
+                                "wave_direction_dominant": (
+                                    daily_marine.get("wave_direction_dominant", [None])[i]
+                                    if i < len(daily_marine.get("wave_direction_dominant", []))
+                                    else None
+                                ),
+                                "wave_period_max": (
+                                    daily_marine.get("wave_period_max", [None])[i]
+                                    if i < len(daily_marine.get("wave_period_max", []))
+                                    else None
+                                ),
+                                "wind_wave_height_max": (
+                                    daily_marine.get("wind_wave_height_max", [None])[i]
+                                    if i < len(daily_marine.get("wind_wave_height_max", []))
+                                    else None
+                                ),
+                                "swell_wave_height_max": (
+                                    daily_marine.get("swell_wave_height_max", [None])[i]
+                                    if i < len(daily_marine.get("swell_wave_height_max", []))
+                                    else None
+                                ),
+                            }
 
-                        # Ajout des données météo si disponibles
-                        if weather_data and "daily" in weather_data:
-                            daily_weather = weather_data["daily"]
-                            weather_dates = daily_weather.get("time", [])
+                            # 2. Ajout des données météo (Weather) si disponibles
+                            if weather_data and "daily" in weather_data:
+                                daily_weather = weather_data["daily"]
+                                weather_dates = daily_weather.get("time", [])
 
-                            if date_str in weather_dates:
-                                weather_idx = weather_dates.index(date_str)
-                                record.update(
-                                    {
-                                        "temperature_max": (
-                                            daily_weather.get("temperature_2m_max", [None])[
-                                                weather_idx
-                                            ]
-                                            if weather_idx
-                                            < len(daily_weather.get("temperature_2m_max", []))
-                                            else None
-                                        ),
-                                        "temperature_min": (
-                                            daily_weather.get("temperature_2m_min", [None])[
-                                                weather_idx
-                                            ]
-                                            if weather_idx
-                                            < len(daily_weather.get("temperature_2m_min", []))
-                                            else None
-                                        ),
-                                        "wind_speed_max": (
-                                            daily_weather.get("wind_speed_10m_max", [None])[
-                                                weather_idx
-                                            ]
-                                            if weather_idx
-                                            < len(daily_weather.get("wind_speed_10m_max", []))
-                                            else None
-                                        ),
-                                        "wind_gusts_max": (
-                                            daily_weather.get("wind_gusts_10m_max", [None])[
-                                                weather_idx
-                                            ]
-                                            if weather_idx
-                                            < len(daily_weather.get("wind_gusts_10m_max", []))
-                                            else None
-                                        ),
-                                        "wind_direction_dominant": (
-                                            daily_weather.get("wind_direction_10m_dominant", [None])[
-                                                weather_idx
-                                            ]
-                                            if weather_idx
-                                            < len(
-                                                daily_weather.get("wind_direction_10m_dominant", [])
-                                            )
-                                            else None
-                                        ),
-                                    }
-                                )
+                                # Normalisation stricte des dates en YYYY-MM-DD pour assurer la correspondance
+                                weather_dates_clean = [str(d)[:10] for d in weather_dates]
+                                date_str_clean = str(date_str)[:10]
 
-                        daily_records.append(record)
+                                # Si la date normalisée existe côté météo, on fusionne
+                                if date_str_clean in weather_dates_clean:
+                                    weather_idx = weather_dates_clean.index(date_str_clean)
+                                    
+                                    record.update(
+                                        {
+                                            "temperature_max": (
+                                                daily_weather.get("temperature_2m_max", [None])[
+                                                    weather_idx
+                                                ]
+                                                if weather_idx
+                                                < len(daily_weather.get("temperature_2m_max", []))
+                                                else None
+                                            ),
+                                            "temperature_min": (
+                                                daily_weather.get("temperature_2m_min", [None])[
+                                                    weather_idx
+                                                ]
+                                                if weather_idx
+                                                < len(daily_weather.get("temperature_2m_min", []))
+                                                else None
+                                            ),
+                                            "wind_speed_max": (
+                                                daily_weather.get("wind_speed_10m_max", [None])[
+                                                    weather_idx
+                                                ]
+                                                if weather_idx
+                                                < len(daily_weather.get("wind_speed_10m_max", []))
+                                                else None
+                                            ),
+                                            "wind_gusts_max": (
+                                                daily_weather.get("wind_gusts_10m_max", [None])[
+                                                    weather_idx
+                                                ]
+                                                if weather_idx
+                                                < len(daily_weather.get("wind_gusts_10m_max", []))
+                                                else None
+                                            ),
+                                            "wind_direction_dominant": (
+                                                daily_weather.get("wind_direction_10m_dominant", [None])[
+                                                    weather_idx
+                                                ]
+                                                if weather_idx
+                                                < len(
+                                                    daily_weather.get("wind_direction_10m_dominant", [])
+                                                )
+                                                else None
+                                            ),
+                                        }
+                                    )
 
-                    except (IndexError, ValueError) as e:
-                        print(f"Erreur traitement date {date_str}: {e}")
-                        continue
+                            daily_records.append(record)
 
-        return pd.DataFrame(daily_records)
+                        except (IndexError, ValueError) as e:
+                            print(f"Erreur lors du traitement de la date {date_str}: {e}")
+                            continue
 
-    # =====================================================================
-    # SAUVEGARDE
-    # =====================================================================
+            return pd.DataFrame(daily_records)
+
+        # =====================================================================
+        # SAUVEGARDE
+        # =====================================================================
 
     def save_data(self, data, start_date, end_date, save_json=False):
         """
@@ -554,8 +704,14 @@ class MeteoMarineMarseille:
             month_end = month_df["date"].max()
 
             year = month_start.strftime("%Y")
-            output_dir = Path("data/raw") / year
+
+
+            # Remonte 2 niveaux (indépendant du script d'exécution)
+            v2_meteo = Path(__file__).resolve().parents[1]
+            output_dir = v2_meteo / "data" / "raw" / year
             output_dir.mkdir(parents=True, exist_ok=True)
+
+
 
             filename = (
                 f"meteo_{month_start.strftime('%Y_%m_%d')}-au-{month_end.strftime('%m_%d')}.csv"

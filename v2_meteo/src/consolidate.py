@@ -13,6 +13,13 @@ Sorties:
 Commande:
 - `python -m src.consolidate`
 - ou execution via `src.pipeline`
+
+Commande précédente :
+- `uv run python -m v2_meteo.src.collect_meteo`
+  (pour générer les fichiers mensuels nécessaires)
+
+Commande suivante (pour entrainer le modele avec ce nouveau fichier):
+- `uv run python -m v2_meteo.src.features_v2`
 """
 
 import pandas as pd
@@ -55,8 +62,12 @@ def consolidate_monthly_data():
     Sauvegarde dans data/processed/consolidated-start-date-au-end-date.parquet
     """
     
-    # Parcours tous les fichiers CSV dans data/raw/
-    raw_dir = Path("data/raw")
+    # Parcours tous les fichiers CSV dans v2_meteo/data/raw/
+    v2_meteo = Path(__file__).resolve().parents[1]
+    raw_dir = v2_meteo / "data" / "raw"
+    processed_dir = v2_meteo / "data" / "processed"
+    processed_dir.mkdir(parents=True, exist_ok=True)
+
     
     if not raw_dir.exists():
         print(f"Erreur: Le dossier {raw_dir} n'existe pas")
@@ -117,11 +128,7 @@ def consolidate_monthly_data():
         print(
             f"Optimisation mémoire: {memory_before / 1024:.1f} KB -> {memory_after / 1024:.1f} KB ({gain_pct:.1f}%)"
         )
-    
-    # Création du dossier processed/
-    processed_dir = Path("data/processed")
-    processed_dir.mkdir(parents=True, exist_ok=True)
-    
+        
     # Sauvegarde du fichier consolidé avec plage de dates dans le nom (Parquet)
     if 'date' in consolidated_df.columns and not consolidated_df.empty:
         start_str = consolidated_df['date'].min().strftime("%Y_%m_%d")

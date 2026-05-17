@@ -2,11 +2,52 @@
 
 from __future__ import annotations
 import os
+from pathlib import Path
+from datetime import datetime, timedelta
 import requests
 import streamlit as st
-from typing import Any
-from pathlib import Path
 import pandas as pd
+
+
+# Injection de CSS pour forcer la charte graphique RTM (Orange RTM & Fond Bleu/Gris)
+st.markdown("""
+    <style>
+    /* 1. Force le fond de l'application en bleu/gris très clair RTM */
+    .stApp {
+        background-color: #F4F7F9 !important;
+    }
+
+    /* 2. Force la couleur de tous les textes en gris foncé RTM */
+    .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp label, .stApp span {
+        color: #393D46 !important;
+    }
+
+    /* 3. Cible spécifiquement le bouton de soumission du formulaire ET le bouton classique */
+    div[data-testid="stFormSubmitButton"] button, div.stButton > button {
+        background-color: #E76B42 !important;
+        color: white !important;
+        border: none !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 4px !important;
+        transition: background-color 0.3s ease !important;
+    }
+
+    /* Effet au survol des boutons (hover) */
+    div[data-testid="stFormSubmitButton"] button:hover, div.stButton > button:hover {
+        background-color: #d15930 !important;
+        color: white !important;
+    }
+
+    /* 4. Donne un fond blanc pur aux blocs de contenu pour créer du contraste */
+    div[data-testid="stForm"], .stTable {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 
 # Dossier où se trouve app.py
 CURRENT_DIR = Path(__file__).parent
@@ -81,40 +122,59 @@ def get_forecast_24h():
 # st.info("Ce modèle combine les données météo et les facteurs métiers (Capitaine/Bateau).")
 st.set_page_config(page_title="Navettes Maritimes", page_icon="🚢", layout="centered")
 st.divider()
+
+
+# --- SECTION 1 : BULLETIN AUTOMATIQUE POUR LE LENDEMAIN ---
 st.subheader("Prévision météo pour demain")
 
 if st.button("🗓️ Générer le bulletin météo"):
-    with st.spinner("Récupération de la météo et calcul des risques..."):
+    with st.spinner("Interrogations des API météo et simulation des lignes..."):
         try:
-            # On appelle notre nouvelle route API
             TOMORROW_URL = API_URL.replace("/predict", "/predict/tomorrow")
-            res = requests.get(TOMORROW_URL)
+            res = requests.get(TOMORROW_URL, timeout=15)
 
             if res.status_code == 200:
                 data = res.json()
                 meteo = data["details_meteo"]
                 bulletin = data["bulletin"]
 
-                # 1. Affichage des conditions météo prévues
-                st.info(f"**Météo prévue (Marseille/Frioul) :** \n"
-                        f"🌊 Vagues : {meteo['wave_height_max']}m | "
-                        f"💨 Vent : {meteo['wind_speed_max']}km/h (Rafales : {meteo['wind_gusts_max']}km/h) | "
-                        f"🌡️ Temp : {meteo['temperature_min']}°C à {meteo['temperature_max']}°C")
+                st.divider()
+
+                # # 1. Affichage des conditions météo prévues
+                # st.info(f"**Météo prévue (Marseille/Frioul) :** \n"
+                #         f"🌊 Vagues : {meteo['wave_height_max']}m | "
+                #         f"💨 Vent : {meteo['wind_speed_max']}km/h (Rafales : {meteo['wind_gusts_max']}km/h) | "
+                #         f"🌡️ Temp : {meteo['temperature_min']}°C à {meteo['temperature_max']}°C")
+
+                # ---- AFFICHAGE EN COLONNES ----
+                col_titre, col_infos = st.columns([1.2, 1.0])
+
+                with col_titre:
+                    # Calcul dynamique de la date de demain
+                    date_demain = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
+                    st.markdown(f"### 🌊 Météo prévue\n**(Marseille / Frioul)**")
+                    st.markdown(f"📅 *Bulletin du {date_demain}*")
+
+                with col_infos:
+                    # Affichage des informations météo les unes au-dessus des autres
+                    st.markdown(f"🔹 **Hauteur des vagues :** `{meteo['wave_height_max']} m`")
+                    st.markdown(f"🔹 **Vitesse du vent :** `{meteo['wind_speed_max']} km/h`")
+                    st.markdown(f"🔹 **Rafales maximales :** `{meteo['wind_gusts_max']} km/h`")
+
+                st.divider()
+
+
 
                 # 2. Construction d'un tableau propre pour le bulletin
-                # On transforme la liste en DataFrame pour un bel affichage
-                import pandas as pd
+                # Transforme la liste en DataFrame pour un bel affichage
                 df_bulletin = pd.DataFrame(bulletin)
-
-                # On renomme les colonnes pour l'utilisateur
+                # Renomme les colonnes pour l'utilisateur
                 df_bulletin.columns = ["Ligne", "Risque d'annulation", "Statut"]
-
                 # Formatage des pourcentages
                 df_bulletin["Risque d'annulation"] = df_bulletin["Risque d'annulation"].apply(lambda x: f"{x:.1%}")
 
                 # Affichage du tableau
                 st.table(df_bulletin)
-
                 st.caption("Note : Calcul basé sur le bateau 'Ratonneau' et le capitaine par défaut.")
             else:
                 st.error("Impossible de récupérer le bulletin automatique.")
@@ -122,6 +182,9 @@ if st.button("🗓️ Générer le bulletin météo"):
         except Exception as e:
             st.error(f"Erreur lors de la génération du bulletin : {e}")
 
+st.divider()
+
+# --- SECTION 2 : CONFIGURATION DE LA BARRE LATÉRALE (SANTE API) ---
 with st.sidebar:
     st.header("Configuration")
     st.write(f"API: {API_URL}")
@@ -134,7 +197,8 @@ with st.sidebar:
         except Exception as exc:  # pragma: no cover - UI feedback
             st.error(f"API indisponible: {exc}")
 
-st.subheader("Données météo")
+# --- SECTION 3 : FORMULAIRE DE SIMULATION MANUELLE (TEMPS RÉEL) ---
+st.subheader("Simulation de traversée en temps réel")
 
 with st.form("prediction_form"):
     col1, col2 = st.columns(2)

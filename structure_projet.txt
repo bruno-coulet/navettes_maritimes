@@ -3,26 +3,31 @@
 ├── compare_versions.py
 ├── docker-compose.orchestration.yml
 ├── docker-compose.vps.yml
-├── front_app
-│   └── app.py
-├── navettes
-│   ├── docker-compose.yml
-│   ├── Dockerfile
-│   ├── LICENCE
-│   ├── main.py
-│   ├── Makefile
-│   ├── pyproject.toml
-│   ├── README.md
-│   └── src
-│       └── predict_annulation.py
+├── generate_structure.py
 ├── open_meteo_ml.egg-info
 │   ├── dependency_links.txt
 │   ├── PKG-INFO
 │   ├── requires.txt
 │   ├── SOURCES.txt
 │   └── top_level.txt
+├── predict
+│   ├── api
+│   │   └── src
+│   │       ├── main.py
+│   │       └── meteo.py
+│   ├── docker-compose.yml
+│   ├── Dockerfile
+│   ├── front
+│   │   ├── app.py
+│   │   └── img
+│   │       └── lebateau.jpg
+│   ├── LICENCE
+│   ├── Makefile
+│   ├── pyproject.toml
+│   └── README.md
 ├── promote_model.py
 ├── pyproject.toml
+├── README_OLD.md
 ├── README.md
 ├── REPORT_FINAL.md
 ├── structure_projet.txt
@@ -149,8 +154,6 @@
 │       ├── features_v2.py
 │       ├── inspect_openmeteo.py
 │       ├── model_utils.py
-│       ├── open_meteo
-│       │   └── artifacts
 │       ├── pipeline.py
 │       ├── split.py
 │       ├── train_v2.py
@@ -169,4 +172,4 @@
         ├── features_v3.py
         └── train_v3.py
 
-31 directories, 139 files
+31 directories, 142 files

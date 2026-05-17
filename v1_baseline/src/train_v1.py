@@ -13,11 +13,11 @@ import json
 from pathlib import Path
 from datetime import datetime
 # On garde ton import existant pour la logique métier
-from features_v1 import load_and_prepare_data, train_model
+from v1_baseline.src.features_v1 import load_and_prepare_data, train_model
 
 # === CONFIGURATION ===
 BASE_DIR = Path(__file__).resolve().parents[2]
-MARITIME_DIR = BASE_DIR / "maritime"
+MARITIME_DIR = BASE_DIR / "v1_baseline"
 ARTIFACTS_DIR = MARITIME_DIR / "artifacts"
 # On crée un dossier spécifique pour cette exécution
 TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")

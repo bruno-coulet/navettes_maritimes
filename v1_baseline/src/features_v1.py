@@ -30,8 +30,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
-from maritime.src.preprocessing_utils import preprocess_maritime_data
-from maritime.src.paths import get_artifacts_dir, get_data_dir
+from v1_baseline.src.preprocessing_utils import preprocess_maritime_data
+from v1_baseline.src.paths import get_artifacts_dir, get_data_dir
 
 
 def load_and_prepare_data(csv_path: str | None = None) -> tuple[pd.DataFrame, pd.Series]:

@@ -17,7 +17,7 @@ Commande:
 
 from pathlib import Path
 
-import src.collect as collect
+import v2_meteo.src.collect_meteo as collect_meteo
 import src.consolidate as consolidate
 import src.split as split
 
@@ -32,7 +32,7 @@ def run_pipeline():
 
     # Étape 1 : Collecte
     print("\nÉTAPE 1 : Collecte des données...")
-    collect.main()
+    collect_meteo.main()
 
     # Étape 2 : Consolidation
     print("\nÉTAPE 2 : Consolidation des fichiers...")

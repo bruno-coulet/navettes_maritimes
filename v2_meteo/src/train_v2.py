@@ -26,8 +26,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 # === CONFIG ===
 # Remonte jusqu'à la racine du projet 'navettes_maritimes'
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-BASE_DIR = PROJECT_ROOT / "open_meteo"
-DATA_PATH = BASE_DIR / "data" / "processed" / "training_merged_meteo_only.parquet"
+BASE_DIR = PROJECT_ROOT / "v2_meteo"
+DATA_PATH = BASE_DIR / "data" / "processed" / "training_merged_meteo.parquet"
 ARTIFACTS_DIR = BASE_DIR / "artifacts"
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -52,7 +52,7 @@ def load_data(parquet_path=DATA_PATH):
     """Charge le dataset mergé."""
     if not parquet_path.exists():
         raise FileNotFoundError(f"Dataset not found: {parquet_path}\n"
-                              f"Run: python recalculate_merge.py first")
+                              f"Run: uv run python -m v2_meteo.src.consolidate first")
 
     df = pd.read_parquet(parquet_path)
     print(f"[1/4] Loaded {len(df)} days from {parquet_path.name}")
