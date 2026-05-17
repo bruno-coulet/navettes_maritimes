@@ -12,14 +12,15 @@ Sorties:
 - donnees brutes, consolidees et splits ML dans `data/`
 
 Commande:
-- `python -m src.pipeline`
+- `uv run python -m v2_meteo.src.pipeline`
 """
 
 from pathlib import Path
 
-import v2_meteo.src.collect_meteo as collect_meteo
-import src.consolidate as consolidate
-import src.split as split
+import v2_meteo.src.a_collect_meteo as a_collect_meteo
+import v2_meteo.src.b_consolidate as b_consolidate
+import v2_meteo.src.c_features_v2 as c_features_v2
+import v2_meteo.src.d_train_v2 as train_v2
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -30,19 +31,19 @@ def run_pipeline():
     print(f"Projet: {PROJECT_ROOT}")
     print("-" * 40)
 
-    # Étape 1 : Collecte
-    print("\nÉTAPE 1 : Collecte des données...")
-    collect_meteo.main()
+    print("\n1/4 : Collecte des données...")
+    a_collect_meteo.main()
 
-    # Étape 2 : Consolidation
-    print("\nÉTAPE 2 : Consolidation des fichiers...")
-    consolidate.main()
+    print("\n2/4 : Consolidation des fichiers...")
+    b_consolidate.main()
 
-    # Étape 3 : Split ML
-    print("\nÉTAPE 3 : Création des splits train/val/test...")
-    split.main()
+    print("\n3/4 : sélection des features...")
+    c_features_v2.main()
 
-    print("\nPIPELINE TERMINÉ AVEC SUCCÈS")
+    print("\n4/4 : split et train...")
+    train_v2.main()
+
+    print("\nPIPELINE V2 TERMINÉ AVEC SUCCÈS")
 
 
 def main():

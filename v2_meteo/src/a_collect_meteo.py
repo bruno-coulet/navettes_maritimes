@@ -1,21 +1,25 @@
-"""Collecte quotidienne des donnees meteo marine de Marseille.
+"""Collecte historique des donnees meteo marine quotidienne de Marseille.
 
 Responsabilite:
-- interroger les APIs open_meteo pour la mer et la meteo generale
-- sauvegarder les donnees brutes quotidiennes ou mensuelles
+- interroger les APIs open-meteo (Marine et Archive ERA5)
+- normaliser et fusionner les donnees sur une maille quotidienne
+- sauvegarder les donnees brutes mensuelles pour le modele ML
 
 Entrees:
-- constantes `START_DATE` / `END_DATE`
-- configuration de sortie dans le dossier `data/raw/`
+- constantes START_DATE / END_DATE    définies dans le script
+- API open-meteo Marine (hauteur/direction des vagues, houle)
+- API open-meteo Archive (temperatures, vent, rafales)
 
 Sorties:
-- fichiers CSV (et optionnellement JSON) dans `data/raw/YYYY/`
+- fichiers CSV mensuels bruts dans `v2_meteo/data/raw/`
 
-Commande:
-- `uv run -m src.collect_meteo`
-- `python -m src.collect_meteo`
-- `uv run -m open_meteo.src.collect_meteo`
-- `python -m open_meteo.src.collect_meteo`
+
+Chronologie d'exécution complète du Pipeline V2 :
+1. Collecte       : `uv run python -m v2_meteo.src.a_collect_meteo`
+2. Consolidation  : `uv run python -m v2_meteo.src.b_consolidate`
+3. Features Merge : `uv run python -m v2_meteo.src.c_features_v2`
+4. Entraînement   : `uv run python -m v2_meteo.src.d_train_v2`
+5. Comparaison    : `uv run python compare_versions.py`
 """
 
 from datetime import datetime, timedelta
@@ -35,10 +39,9 @@ except ImportError:
 # CONFIGURATION - Modifier ces constantes pour personnaliser les requêtes
 # ============================================================================
 # Format: "YYYY-MM-DD" ou None pour utiliser les valeurs par défaut
-START_DATE = "2024-01-01"  # None = il y a 730 jours; exemple: "2024-01-22"
-# START_DATE = "2026-04-01"  # None = il y a 730 jours; exemple: "2024-01-22"
-END_DATE = "2026-04-30"    # None = aujourd'hui; exemple: "2026-01-22"
-# END_DATE = None  # None = aujourd'hui; exemple: "2026-01-22"
+START_DATE = "2024-01-01"
+END_DATE = "2026-04-30" 
+
 
 
 # Format de sauvegarde des données

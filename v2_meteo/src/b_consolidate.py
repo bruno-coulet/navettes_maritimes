@@ -10,16 +10,12 @@ Entrees:
 Sorties:
 - fichier consolide dans `data/processed/`
 
-Commande:
-- `python -m src.consolidate`
-- ou execution via `src.pipeline`
-
-Commande précédente :
-- `uv run python -m v2_meteo.src.collect_meteo`
-  (pour générer les fichiers mensuels nécessaires)
-
-Commande suivante (pour entrainer le modele avec ce nouveau fichier):
-- `uv run python -m v2_meteo.src.features_v2`
+Chronologie d'exécution complète du Pipeline V2 :
+1. Collecte       : `uv run python -m v2_meteo.src.a_collect_meteo`
+2. Consolidation  : `uv run python -m v2_meteo.src.b_consolidate`
+3. Features Merge : `uv run python -m v2_meteo.src.c_features_v2`
+4. Entraînement   : `uv run python -m v2_meteo.src.d_train_v2`
+5. Comparaison    : `uv run python compare_versions.py`
 """
 
 import pandas as pd

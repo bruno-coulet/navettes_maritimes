@@ -1,14 +1,20 @@
 """
 Train RandomForest model on open_meteo merged data.
 
-Differences vs previous v2:
+Differences vs version prédédente v2:
 1. Input: training_merged.parquet (Annulation='mean', distribution réelle)
-2. Features: même que avant (wave_height, temperature, wind, etc)
+2. Features: inchangées (wave_height, temperature, wind, etc)
 3. Cible: Annulation comme probabilité ou binaire (test les deux)
 
 Données corrigées:
-- Periode: 2024-01-01 → 2026-01-09 (719 jours)
-- Distribution: 18.5% annulations (vs 65.6% avant, vs 16.6% v1)
+- Distribution: 18.5% d'annulations (vs 65.6% avec le merge  à max au lieu de mean, vs 16.6% v1)
+
+Chronologie d'exécution complète du Pipeline V2 :
+1. Collecte       : `uv run python -m v2_meteo.src.a_collect_meteo`
+2. Consolidation  : `uv run python -m v2_meteo.src.b_consolidate`
+3. Features Merge : `uv run python -m v2_meteo.src.c_features_v2`
+4. Entraînement   : `uv run python -m v2_meteo.src.d_train_v2`
+5. Comparaison    : `uv run python compare_versions.py`
 """
 
 import json
@@ -17,7 +23,6 @@ from pathlib import Path
 from datetime import datetime
 
 import pandas as pd
-import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix

@@ -16,7 +16,7 @@ Commande:
 - ou `METEO_EXAMPLE_PROXY=1 python main.py` pour l'exemple
 """
 
-from src.pipeline import main as pipeline_main
+from v2_meteo.src.pipeline import main as pipeline_main
 import os
 
 

@@ -19,6 +19,6 @@
         "wind_to_wave_ratio",
         "temp_range"
     ],
-    "trained_at": "2026-05-17T03:30:46.409273",
+    "trained_at": "2026-05-17T10:00:33.240815",
     "model_type": "RandomForest_V2_MeteoOnly"
 }
