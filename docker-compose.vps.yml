@@ -6,8 +6,8 @@
 services:
   api:
     build:
-      context: .
-      dockerfile: predict/Dockerfile
+      context: .predict/
+      dockerfile: Dockerfile
     container_name: navettes_api
     restart: unless-stopped
     env_file:
@@ -32,8 +32,8 @@ services:
 
   front:
     build:
-      context: .
-      dockerfile: predict/Dockerfile # utilise le même Dckerfile
+      context: .predict/
+      dockerfile: Dockerfile # utilise le même Dckerfile
     container_name: navettes_front
     restart: unless-stopped
     env_file:
@@ -42,6 +42,9 @@ services:
       - PYTHONUNBUFFERED=1
       - API_URL=${API_URL:-https://api.navettes_maritimes.lab.zanza-creation.com/predict}
       - STREAMLIT_PORT=${STREAMLIT_PORT:-8501}
+    # On ajuste le chemin de l'app puisque le contexte est déjà dans predict
+    entrypoint: ["streamlit", "run", "front/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    expose:
     expose:
       - "8501"
     depends_on:
