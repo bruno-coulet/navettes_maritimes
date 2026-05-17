@@ -7,7 +7,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile.api
+      dockerfile: predict/Dockerfile
     container_name: navettes_api
     restart: unless-stopped
     env_file:
@@ -33,7 +33,7 @@ services:
   front:
     build:
       context: .
-      dockerfile: Dockerfile.front
+      dockerfile: predict/Dockerfile # utilise le même Dckerfile
     container_name: navettes_front
     restart: unless-stopped
     env_file:
