@@ -15,7 +15,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       # - MODEL_PATH=${MODEL_PATH:-/model/model.pkl}
-      - MODEL_PATH=/app/predict/api/model_v3.pkl  # Chemin absolu dans le conteneur
+      - MODEL_PATH=/app/predict/api/src/model_v3.pkl  # Chemin absolu dans le conteneur
       - FEATURES_PATH=${FEATURES_PATH:-/model/features.json}
     # volumes:
     #   - maritime_artifacts:/model:ro
