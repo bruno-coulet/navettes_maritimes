@@ -8,63 +8,118 @@ import requests
 import streamlit as st
 import pandas as pd
 
-
-# Injection de CSS pour forcer la charte graphique RTM (Orange RTM & Fond Bleu/Gris)
+# Injection CSS : Mode épuré sans bordures de boîtes (Flat Design)
 st.markdown("""
     <style>
-    /* 1. Force le fond de l'application en bleu/gris très clair RTM */
-    .stApp {
-        background-color: #F4F7F9 !important;
+    /* BORDURE ORANGE LORSQU'ON CLIQUE DEDANS (FOCUS) */
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
+    div[data-testid="stNumberInput"] div[data-baseweb="input"] > div:focus-within,
+    div[data-testid="stTextInput"] div[data-baseweb="input"] > div:focus-within {
+        border-color: #E76B42 !important;            /* primaryColor */
+        box-shadow: 0 0 0 1px #E76B42 !important;    /* Effet de brillance natif */
     }
 
-    /* 2. Force la couleur de tous les textes en gris foncé RTM */
-    .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp label, .stApp span {
-        color: #393D46 !important;
-    }
-
-    /* 3. Cible spécifiquement le bouton de soumission du formulaire ET le bouton classique */
-    div[data-testid="stFormSubmitButton"] button, div.stButton > button {
+    /* STYLE DES BOUTONS */
+    div.stButton > button, div[data-testid="stFormSubmitButton"] > button {
         background-color: #E76B42 !important;
-        color: white !important;
+        color: #FFFFFF !important;
         border: none !important;
-        padding: 0.5rem 1rem !important;
-        border-radius: 4px !important;
-        transition: background-color 0.3s ease !important;
     }
-
-    /* Effet au survol des boutons (hover) */
-    div[data-testid="stFormSubmitButton"] button:hover, div.stButton > button:hover {
+    div.stButton > button:hover, div[data-testid="stFormSubmitButton"] > button:hover {
         background-color: #d15930 !important;
-        color: white !important;
     }
 
-    /* 4. Donne un fond blanc pur aux blocs de contenu pour créer du contraste */
-    div[data-testid="stForm"], .stTable {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
+    /* STYLE DES TABLEAUX (st.table) */
+
+    /* 1. Bordure extérieure du tableau */
+    [data-testid="stTable"] > div {
+        border: 1px solid #393D46 !important;
+        border-radius: 6px !important;
+        overflow: hidden !important;       /* Garde les coins arrondis propres */
     }
+
+    /* 2. Bordure intérieure (séparation des lignes et colonnes) */
+    .stTable th, .stTable td {
+        border-bottom: 1px solid #393D46 !important;
+        color: #393D46 !important;         /* texte gris foncé */
+    }
+
+    /* Optionnel : en-tête surfond gris clair */
+    .stTable thead tr th {
+        background-color: #EEEEEE !important;
+    }
+
     </style>
 """, unsafe_allow_html=True)
+# couleur de bouton #E76B42
+# couleur de texte #393D46
+# couleur pour les alertes critiques #E30510
+
 
 
 # Dossier où se trouve app.py
 CURRENT_DIR = Path(__file__).parent
 IMAGE_PATH = CURRENT_DIR / "img" / "lebateau.jpg"
 API_URL = os.getenv("API_URL", "http://localhost:8000/predict")
+# Configuration des URLs des APIs
+API_URL_PREDICT = "http://localhost:8000/predict"
+API_URL_BULLETIN = "http://localhost:8000/bulletin"
+
+
+
+def nettoyer_statut(statut_texte):
+    """Retire les émojis de statut pour un affichage texte pur."""
+    if not isinstance(statut_texte, str):
+        return statut_texte
+    return statut_texte.replace("✅", "").replace("❌", "").strip()
+
+def generer_bulletin_demain():
+    """Appelle l'API pour générer le bulletin complet de demain."""
+    try:
+        res = requests.get(API_URL_BULLETIN)
+        if res.status_code == 200:
+            data = res.json()
+            meteo = data["details_meteo"]
+            bulletin = data["bulletin"]
+
+            st.divider()
+            
+            date_demain = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
+            st.markdown(f"### 🌊 Météo prévue")
+            st.markdown(f"**(Marseille / Frioul)**")
+            st.markdown(f"📅 *Bulletin du {date_demain}*\n")
+            
+            # Affichage vertical sous le titre
+            st.markdown(f"**Hauteur des vagues :** `{meteo['wave_height_max']} m`")
+            st.markdown(f"**Vitesse du vent :** `{meteo['wind_speed_max']} km/h`")
+            st.markdown(f"**Rafales maximales :** `{meteo['wind_gusts_max']} km/h`")
+
+            st.divider()
+
+            # Construction du tableau
+            df_bulletin = pd.DataFrame(bulletin)
+            df_bulletin.columns = ["Ligne", "Risque d'annulation", "Statut"]
+            
+            # Formatage
+            df_bulletin["Risque d'annulation"] = df_bulletin["Risque d'annulation"].apply(lambda x: f"{x:.1%}")
+            df_bulletin["Statut"] = df_bulletin["Statut"].apply(nettoyer_statut)
+
+            st.table(df_bulletin)
+            st.caption("Note : Calcul basé sur le bateau 'Ratonneau' et le capitaine par défaut.")
+        else:
+            st.error(f"Impossible de générer le bulletin (Code {res.status_code})")
+    except Exception as e:
+        st.error(f"Erreur de connexion à l'API : {e}")
+
 
 st.title("Navettes Maritimes")
-st.set_page_config(page_title="Navettes Maritimes V3", page_icon="🚢", layout="wide")
+st.set_page_config(page_title="Navettes Maritimes", page_icon="🚢", layout="centered")
 if IMAGE_PATH.exists():
     st.image(str(IMAGE_PATH))
 else:
     st.warning(f"Image non trouvée à l'emplacement : {IMAGE_PATH}")
 
 
-# couleur de bouton #E76B42
-# couleur de texte #393D46
-# couleur pour les alertes critiques #E30510
 
 # Listes issues des features V3 (nettoyées des préfixes pour l'UI)
 CAPITAINES = ["0cb84352", "0d121578", "14082eb5", "1509f9cf", "1718b47d", "185e82ca", "1b34dcd4", "1cf4a8b5", "1ed3875f", "23d15265", "2caaceac", "33603a19", "357c3e95", "37852178", "3954bf2d", "39af1330", "3a85997b", "3cb5e71c", "3da84ea0", "3e528ded", "44df863c", "4a43010f", "4db5823d", "4ea37f6d", "52e2838f", "5ba1d311", "60f35e90", "633ee2cc", "67eee8d4", "6decabc9", "6e2e1ed7", "781ea93a", "7f2a897b", "87eb49a2", "8843e5b9", "8b638b7c", "9c91e0cb", "9e6fdb63", "a060d80f", "a6ab9a79", "a6edc93d", "ab0aaf45", "ace2ff49", "ad6931e3", "b5826588", "bdd4013b", "c1263f83", "c27be312", "c35d80c4", "c563db71", "c9970e45", "cb2c3739", "cf9d1f29", "d0f033d5", "d27338fd", "d5df07d7", "d74108d2", "d7f002ce", "daffbea6", "e212f1aa", "e6fffe58", "ea2bcbe6", "ef7af6bd", "f1446137", "f2d105cb", "f32c6167", "f74faffe", "fc3f7e33", "fcb64262", "fd07cd3b"]
@@ -119,15 +174,17 @@ def get_forecast_24h():
 
 
 
-# st.info("Ce modèle combine les données météo et les facteurs métiers (Capitaine/Bateau).")
-st.set_page_config(page_title="Navettes Maritimes", page_icon="🚢", layout="centered")
 st.divider()
 
 
-# --- SECTION 1 : BULLETIN AUTOMATIQUE POUR LE LENDEMAIN ---
-st.subheader("Prévision météo pour demain")
+# --- BULLETIN AUTOMATIQUE POUR LE LENDEMAIN ---
+st.subheader("Prévision météo et annulation pour demain")
+st.write("Générez le bulletin météo pour obtenir les prévisions sur l'ensemble des lignes.")
 
-if st.button("🗓️ Générer le bulletin météo"):
+# 1. Centrage du bouton grâce aux colonnes Streamlit (les côtés servent de poussoirs)
+col_gauche, col_centre, col_droite = st.columns([1, 1.2, 1])
+
+if st.button("Générer le bulletin météo"):
     with st.spinner("Interrogations des API météo et simulation des lignes..."):
         try:
             TOMORROW_URL = API_URL.replace("/predict", "/predict/tomorrow")
@@ -138,32 +195,16 @@ if st.button("🗓️ Générer le bulletin météo"):
                 meteo = data["details_meteo"]
                 bulletin = data["bulletin"]
 
-                st.divider()
+                # Calcul dynamique de la date de demain
+                date_demain = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
+                st.markdown(f"### 🌊 Météo prévue\n**(Marseille / Frioul)**")
+                st.markdown(f"*Bulletin du {date_demain}*")
 
-                # # 1. Affichage des conditions météo prévues
-                # st.info(f"**Météo prévue (Marseille/Frioul) :** \n"
-                #         f"🌊 Vagues : {meteo['wave_height_max']}m | "
-                #         f"💨 Vent : {meteo['wind_speed_max']}km/h (Rafales : {meteo['wind_gusts_max']}km/h) | "
-                #         f"🌡️ Temp : {meteo['temperature_min']}°C à {meteo['temperature_max']}°C")
-
-                # ---- AFFICHAGE EN COLONNES ----
-                col_titre, col_infos = st.columns([1.2, 1.0])
-
-                with col_titre:
-                    # Calcul dynamique de la date de demain
-                    date_demain = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
-                    st.markdown(f"### 🌊 Météo prévue\n**(Marseille / Frioul)**")
-                    st.markdown(f"📅 *Bulletin du {date_demain}*")
-
-                with col_infos:
+                # with col_infos:
                     # Affichage des informations météo les unes au-dessus des autres
-                    st.markdown(f"🔹 **Hauteur des vagues :** `{meteo['wave_height_max']} m`")
-                    st.markdown(f"🔹 **Vitesse du vent :** `{meteo['wind_speed_max']} km/h`")
-                    st.markdown(f"🔹 **Rafales maximales :** `{meteo['wind_gusts_max']} km/h`")
-
-                st.divider()
-
-
+                st.markdown(f"**Hauteur des vagues :** `{meteo['wave_height_max']} m`")
+                st.markdown(f"**Vitesse du vent :** `{meteo['wind_speed_max']} km/h`")
+                st.markdown(f"**Rafales maximales :** `{meteo['wind_gusts_max']} km/h`")
 
                 # 2. Construction d'un tableau propre pour le bulletin
                 # Transforme la liste en DataFrame pour un bel affichage
@@ -182,9 +223,16 @@ if st.button("🗓️ Générer le bulletin météo"):
         except Exception as e:
             st.error(f"Erreur lors de la génération du bulletin : {e}")
 
+st.markdown('</div>', unsafe_allow_html=True)
+
+# 2. Ajout d'un espace (bottom padding) sous le bouton pour espacer les sections
+st.markdown('<div style="margin-bottom: 5rem;"></div>', unsafe_allow_html=True)
+
 st.divider()
 
-# --- SECTION 2 : CONFIGURATION DE LA BARRE LATÉRALE (SANTE API) ---
+
+
+# --- CONFIGURATION DE LA BARRE LATÉRALE (SANTE API) ---
 with st.sidebar:
     st.header("Configuration")
     st.write(f"API: {API_URL}")
@@ -197,41 +245,49 @@ with st.sidebar:
         except Exception as exc:  # pragma: no cover - UI feedback
             st.error(f"API indisponible: {exc}")
 
-# --- SECTION 3 : FORMULAIRE DE SIMULATION MANUELLE (TEMPS RÉEL) ---
-st.subheader("Simulation de traversée en temps réel")
+# --- FORMULAIRE DE SIMULATION MANUELLE (TEMPS RÉEL) ---
+st.markdown("##### Simulation de traversée, par ligne")
+st.write("Renseignez les champs ci-dessous pour obtenir les prévisions.")
 
 with st.form("prediction_form"):
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("🚢 Exploitation")
-        capitaine = st.selectbox("Capitaine", CAPITAINES)
+        st.markdown("##### 🚢 Exploitation")
+        capitaine = st.selectbox("Capitaine (anonymisé)", CAPITAINES)
         bateau = st.selectbox("Bateau", BATEAUX)
         ligne = st.selectbox("Ligne", LIGNES)
 
     with col2:
-        st.subheader("🌦️ Conditions Météo")
-        wind_s = st.number_input("Vitesse Vent (km/h)", value=15.0)
-        wind_g = st.number_input("Rafales (km/h)", value=25.0)
+        st.markdown("##### 🌦️ Conditions Météo")
+        wind_s = st.number_input("Vitesse Vent (km/h)", value=15)
+        wind_g = st.number_input("Rafales (km/h)", value=25)
         wind_orientation = st.selectbox("Orientation (Rose des vents)", DIRECTIONS_VENT, index=14) # NW par défaut
-        wind_deg = st.number_input("Direction précise (Degrés)", value=290)
+        # wind_deg = st.number_input("Orientation (Degrés)", value=290)
 
     st.divider()
 
-    st.subheader("🌊 État de la Mer")
+    st.markdown("##### 🌊 État de la Mer")
     sea1, sea2 = st.columns(2)
     with sea1:
         wave_h = st.number_input("Hauteur max Vagues (m)", value=0.5, step=0.1, max_value=5.0)
         wave_p = st.number_input("Période Vagues (s)", value=4.0, step=0.5)
 
     with sea2:
-        wave_dir = st.number_input("Direction de la houle (Degrés)", value=270)
+        wave_dir = st.number_input("Direction de la houle (Degrés)", value=270, step=25)
 
     submitted = st.form_submit_button("Calculer la probabilité d'annulation ou de maintien")
 
     if submitted:
         # Construction du payload pour l'API
         # On envoie les valeurs brutes, le backend (FastAPI) s'occupera du One-Hot Encoding
+        # Correspondance Secteur -> Degrés pour le modèle de Machine Learning
+        conversion_degres = {
+            "N": 0.0, "NE": 45.0, "E": 90.0, "SE": 135.0, 
+            "S": 180.0, "SW": 225.0, "W": 270.0, "NW": 290.0
+        }
+        # On récupère les degrés associés à la rose des vents sélectionnée (par défaut 290 si NW)
+        degres_calcules = conversion_degres.get(wind_orientation, 290.0)
         payload = {
             "wave_height_max": wave_h,
             "wave_period_max": wave_p,
@@ -240,7 +296,8 @@ with st.form("prediction_form"):
             # "temperature_min": temp_min,
             "wind_speed_max": wind_s,
             "wind_gusts_max": wind_g,
-            "wind_direction_dominant": float(wind_deg),
+            # Utilise la valeur calculée ci-dessus
+            "wind_direction_dominant": float(degres_calcules),
             "Capitaine": capitaine,
             "Bateau": bateau,
             "Ligne": ligne,
@@ -258,10 +315,10 @@ with st.form("prediction_form"):
                 st.divider() # Petite ligne de séparation pour la clarté
 
                 if prob_annulation > 0.5:
-                    st.error(f"⚠️ RISQUE D'ANNULATION : {prob_annulation:.1%}")
+                    st.error(f"RISQUE D'ANNULATION : {prob_annulation:.1%}")
                     st.progress(prob_annulation)
                 else:
-                    st.success(f"✅ DÉPART PROBABLE : {prob_maintien:.1%}")
+                    st.success(f"DÉPART PROBABLE : {prob_maintien:.1%}")
                     st.progress(prob_maintien)
                     st.write(f"Le modèle est confiant à {prob_maintien:.1%} sur le maintien de la desserte.")
 

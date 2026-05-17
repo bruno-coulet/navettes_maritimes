@@ -4,10 +4,13 @@ import pandas as pd
 def get_forecast_24h():
     """Récupère les prévisions pour Marseille (Frioul)."""
     # Note : Open-Meteo sépare parfois la météo classique et la marine
-    url = "https://api.open-meteo.com/v1/forecast"
+    # url = "https://api.open-meteo.com/v1/forecast"
+    url = "https://api.open-meteo.com/v1/marine"
     params = {
-        "latitude": 43.28,
-        "longitude": 5.30,
+        "latitude": 43.275,
+        "longitude": 5.325,
+        # "latitude": 43.28,
+        # "longitude": 5.30,
         "hourly": ["wave_height", "wave_period", "wind_speed_10m", "wind_gusts_10m"],
         "daily": ["temperature_2m_max", "temperature_2m_min"],
         "timezone": "Europe/Paris",
