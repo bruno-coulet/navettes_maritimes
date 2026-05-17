@@ -61,9 +61,17 @@ st.markdown("""
 CURRENT_DIR = Path(__file__).parent
 IMAGE_PATH = CURRENT_DIR / "img" / "lebateau.jpg"
 API_URL = os.getenv("API_URL", "http://localhost:8000/predict")
+
 # Configuration des URLs des APIs
-API_URL_PREDICT = "http://localhost:8000/predict"
-API_URL_BULLETIN = "http://localhost:8000/bulletin"
+# API_URL_PREDICT = "http://localhost:8000/predict"
+# API_URL_BULLETIN = "http://localhost:8000/bulletin"
+
+# Récupère la variable d'env 'API_URL' configurée dans Docker Compose
+# Si elle n'existe pas (en local), on utilise 'http://localhost:8000' par défaut
+BASE_API_URL = os.getenv("API_URL", "http://localhost:8000")
+# Configuration dynamique des URLs des APIs
+API_URL_PREDICT = f"{BASE_API_URL}/predict"
+API_URL_BULLETIN = f"{BASE_API_URL}/bulletin"
 
 
 
