@@ -37,7 +37,7 @@ navettes/.env*
 # Docker
 docker-compose.override.yml
 *.docker
-Dockerfile*
+
 
 # Logs et données temporaires
 *.log
