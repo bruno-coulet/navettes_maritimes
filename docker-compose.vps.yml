@@ -6,7 +6,7 @@
 services:
   api:
     build:
-      context: .predict/
+      context: predict/
       dockerfile: Dockerfile
     container_name: navettes_api
     restart: unless-stopped
@@ -32,7 +32,7 @@ services:
 
   front:
     build:
-      context: .predict/
+      context: predict/
       dockerfile: Dockerfile # utilise le même Dckerfile
     container_name: navettes_front
     restart: unless-stopped
