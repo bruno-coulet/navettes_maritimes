@@ -44,8 +44,10 @@ services:
       - PYTHONUNBUFFERED=1
       # - API_URL=${API_URL:-https://api.navettes-maritimes.lab.zanza-creation.com}
       - STREAMLIT_PORT=${STREAMLIT_PORT:-8501}
-      # Le front appelle l'API directement par son nom de service Docker, sur le port 8000
-      - API_URL=http://api:8000
+      # Le front appelle l'API directement par son nom de service Docker
+      # sur le port 8000
+      # force l'URL à pointer directement là où le POST est attendu
+      - API_URL=http://api:8000/predict
 
     # On ajuste le chemin de l'app.py
     entrypoint: ["streamlit", "run", "predict/front/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
