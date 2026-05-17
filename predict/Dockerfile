@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copier les fichiers sources
 COPY pyproject.toml pyproject.lock* ./
 COPY src/ ./src/
-COPY main.py .
+
 
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -e . && \

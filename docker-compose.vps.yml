@@ -6,7 +6,7 @@
 services:
   api:
     build:
-      context: predict/
+      context: .
       dockerfile: Dockerfile
     container_name: navettes_api
     restart: unless-stopped
@@ -15,12 +15,14 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       # - MODEL_PATH=${MODEL_PATH:-/model/model.pkl}
-      - MODEL_PATH=/app/v3_hybride/artifacts/model_v3.pkl  # Chemin absolu dans le conteneur
+      - MODEL_PATH=/app/predict/api/model_v3.pkl  # Chemin absolu dans le conteneur
       - FEATURES_PATH=${FEATURES_PATH:-/model/features.json}
     # volumes:
     #   - maritime_artifacts:/model:ro
     expose:
       - "8000"
+    # DIT À L'API OÙ SE TROUVE LE VRAI MAIN.PY
+    command: uvicorn predict.api.src.main:app --host 0.0.0.0 --port 8000
     networks:
       - traefik
     labels:
@@ -32,8 +34,8 @@ services:
 
   front:
     build:
-      context: predict/
-      dockerfile: Dockerfile # utilise le même Dckerfile
+      context: .
+      dockerfile: Dockerfile # utilise le même Dockerfile
     container_name: navettes_front
     restart: unless-stopped
     env_file:
@@ -42,8 +44,8 @@ services:
       - PYTHONUNBUFFERED=1
       - API_URL=${API_URL:-https://api.navettes_maritimes.lab.zanza-creation.com/predict}
       - STREAMLIT_PORT=${STREAMLIT_PORT:-8501}
-    # On ajuste le chemin de l'app puisque le contexte est déjà dans predict
-    entrypoint: ["streamlit", "run", "front/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    # On ajuste le chemin de l'app.py
+    entrypoint: ["streamlit", "run", "predict/front/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
     expose:
       - "8501"
     depends_on:
