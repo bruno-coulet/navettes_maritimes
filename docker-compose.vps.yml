@@ -54,7 +54,7 @@ services:
     expose:
       - "8501"
     depends_on:
-      - api
+      - navettes-api
     networks:
       - traefik
     labels:
