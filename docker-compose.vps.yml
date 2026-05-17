@@ -27,7 +27,7 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.navettes-api.rule=Host(`api.navettes_maritimes.lab.zanza-creation.com`)"
+      - "traefik.http.routers.navettes-api.rule=Host(`api.navettes-maritimes.lab.zanza-creation.com`)"
       - "traefik.http.routers.navettes-api.entrypoints=websecure"
       - "traefik.http.routers.navettes-api.tls.certresolver=myresolver"
       - "traefik.http.services.navettes-api.loadbalancer.server.port=8000"
@@ -42,7 +42,7 @@ services:
       - .env
     environment:
       - PYTHONUNBUFFERED=1
-      # - API_URL=${API_URL:-https://api.navettes_maritimes.lab.zanza-creation.com/predict}
+      # - API_URL=${API_URL:-https://api.navettes-maritimes.lab.zanza-creation.com/predict}
       # - STREAMLIT_PORT=${STREAMLIT_PORT:-8501}
       # Le front appelle l'API directement par son nom de service Docker, sur le port 8000
       - API_URL=http://api:8000
@@ -57,7 +57,7 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.navettes-front.rule=Host(`navettes_maritimes.lab.zanza-creation.com`)"
+      - "traefik.http.routers.navettes-front.rule=Host(`navettes-maritimes.lab.zanza-creation.com`)"
       - "traefik.http.routers.navettes-front.entrypoints=websecure"
       - "traefik.http.routers.navettes-front.tls.certresolver=myresolver"
       - "traefik.http.services.navettes-front.loadbalancer.server.port=8501"
