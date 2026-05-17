@@ -4,7 +4,7 @@
 # - Réseau Traefik externe déjà présent sur le VPS
 
 services:
-  api:
+  navettes-api:
     build:
       context: .
       dockerfile: Dockerfile
@@ -47,7 +47,7 @@ services:
       # Le front appelle l'API directement par son nom de service Docker
       # sur le port 8000
       # force l'URL à pointer directement là où le POST est attendu
-      - API_URL=http://api:8000/predict
+      - API_URL=http://navettes-api:8000/predict
 
     # On ajuste le chemin de l'app.py
     entrypoint: ["streamlit", "run", "predict/front/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
