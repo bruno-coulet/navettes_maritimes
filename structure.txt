@@ -1,0 +1,120 @@
+.
+├── Dockerfile
+├── README.md
+├── REPORT_FINAL.md
+├── compare_versions.py
+├── docker-compose.orchestration.yml
+├── docker-compose.vps.yml
+├── predict
+│   ├── Dockerfile
+│   ├── LICENCE
+│   ├── Makefile
+│   ├── README.md
+│   ├── api
+│   │   └── src
+│   │       ├── main.py
+│   │       ├── meteo.py
+│   │       ├── metrics_v3.json
+│   │       └── model_v3.pkl
+│   ├── docker-compose.yml
+│   ├── front
+│   │   ├── app.py
+│   │   └── img
+│   │       └── lebateau.jpg
+│   └── pyproject.toml
+├── promote_model.py
+├── pyproject.toml
+├── structure.txt
+├── structure_projet.txt
+├── uv.lock
+├── v1_baseline
+│   ├── Dockerfile
+│   ├── README.md
+│   ├── __init__
+│   ├── artifacts
+│   │   ├── metrics_v1.json
+│   │   └── model_v1.pkl
+│   ├── data
+│   │   ├── consolidation_maritime.xlsx
+│   │   ├── lignes
+│   │   │   ├── Frioul_if.csv
+│   │   │   ├── PR_goudes.csv
+│   │   │   ├── VP_PR.csv
+│   │   │   ├── VP_estaque.csv
+│   │   │   ├── VP_frioul.csv
+│   │   │   ├── VP_frioul_if.csv
+│   │   │   └── VP_if.csv
+│   │   └── maritime_clean.csv
+│   ├── exports
+│   │   ├── correlations_annulation.png
+│   │   ├── correlations_annulation_split.png
+│   │   ├── correlations_annulation_split3.png
+│   │   ├── matrice_de_correlations.png
+│   │   └── matrice_top_15.png
+│   ├── img
+│   │   ├── rose_des_vents.gif
+│   │   ├── sinus-cosinus-cercle-normal.webp
+│   │   ├── trig.PNG
+│   │   ├── trig.gif
+│   │   ├── trig2.png
+│   │   └── trigo.PNG
+│   ├── notebooks
+│   │   ├── 01_cleaning.ipynb
+│   │   ├── 02_ligne_selector.ipynb
+│   │   ├── 03_processing_v0.ipynb
+│   │   ├── 03_processing_v1.ipynb
+│   │   ├── 04_model_comparison.ipynb
+│   │   └── cleanning_old.ipynb
+│   └── src
+│       ├── cleaning.py
+│       ├── cleaning_utils.py
+│       ├── features_v1.py
+│       ├── inspect_maritime.py
+│       ├── ligne_selector.py
+│       ├── paths.py
+│       ├── preprocessing.py
+│       ├── preprocessing_utils.py
+│       ├── retrain_old.py
+│       └── train_v1.py
+├── v2_meteo
+│   ├── LICENCE
+│   ├── Makefile
+│   ├── ORCHESTRATION.md
+│   ├── README.md
+│   ├── artifacts
+│   │   ├── metrics_v2.json
+│   │   └── model_v2.pkl
+│   ├── docker-compose.yml
+│   ├── documentation
+│   │   ├── DOCKER.md
+│   │   ├── DOCKER_EXPLIQUE.md
+│   │   ├── README_ML.md
+│   │   ├── STRUCTURE.md
+│   │   └── UTILS_EXPLIQUE.md
+│   ├── main.py
+│   └── src
+│       ├── __init__.py
+│       ├── a_collect_meteo.py
+│       ├── b_consolidate.py
+│       ├── c_features_v2.py
+│       ├── d_train_v2.py
+│       ├── eda_utils.py
+│       ├── inspect_openmeteo.py
+│       ├── model_utils.py
+│       ├── pipeline.py
+│       └── utils.py
+└── v3_hybride
+    ├── README.md
+    ├── __init__.py
+    ├── artifacts
+    │   ├── metrics_v3.json
+    │   └── model_v3.pkl
+    ├── data
+    │   └── processed
+    │       └── training_merged_v3.parquet
+    └── src
+        ├── __init__.py
+        ├── features_v3.py
+        └── train_v3.py
+
+23 directories, 95 files

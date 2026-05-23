@@ -56,15 +56,23 @@ st.markdown("""
 # couleur pour les alertes critiques #E30510
 
 
+
 # Dossier où se trouve app.py
 CURRENT_DIR = Path(__file__).parent
 IMAGE_PATH = CURRENT_DIR / "img" / "lebateau.jpg"
 API_URL = os.getenv("API_URL", "http://localhost:8000/predict")
 
 # Configuration des URLs des APIs
+# API_URL_PREDICT = "http://localhost:8000/predict"
+# API_URL_BULLETIN = "http://localhost:8000/bulletin"
+
+# Récupère la variable d'env 'API_URL' configurée dans Docker Compose
+# Si elle n'existe pas (en local), on utilise 'http://localhost:8000' par défaut
 BASE_API_URL = os.getenv("API_URL", "http://localhost:8000")
+# Configuration dynamique des URLs des APIs
 API_URL_PREDICT = f"{BASE_API_URL}/predict"
 API_URL_BULLETIN = f"{BASE_API_URL}/bulletin"
+
 
 
 def nettoyer_statut(statut_texte):
@@ -112,13 +120,13 @@ def generer_bulletin_demain():
         st.error(f"Erreur de connexion à l'API : {e}")
 
 
-st.set_page_config(page_title="Navettes Maritimes", page_icon="🚢", layout="centered")
 st.title("Navettes Maritimes")
-
+st.set_page_config(page_title="Navettes Maritimes", page_icon="🚢", layout="centered")
 if IMAGE_PATH.exists():
     st.image(str(IMAGE_PATH))
 else:
     st.warning(f"Image non trouvée à l'emplacement : {IMAGE_PATH}")
+
 
 
 # Listes issues des features V3 (nettoyées des préfixes pour l'UI)
@@ -147,6 +155,7 @@ def _field(number_label: str, key: str, help_text: str, default: float = 0.0) ->
 
 def get_forecast_24h():
     """Récupère les prévisions pour Marseille (Frioul)."""
+
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": 43.28,
@@ -157,9 +166,11 @@ def get_forecast_24h():
         "forecast_days": 1
     }
 
+    st.write(f"DEBUG: Appel de l'URL : {TOMORROW_URL}")
     response = requests.get(url, params=params)
     data = response.json()
 
+    # On agrège pour obtenir les 'max' du lendemain
     return {
         "wave_height_max": max(data["hourly"]["wave_height"]),
         "wave_period_max": max(data["hourly"]["wave_period"]),
@@ -170,6 +181,7 @@ def get_forecast_24h():
     }
 
 
+
 st.divider()
 
 
@@ -177,6 +189,7 @@ st.divider()
 st.subheader("Prévision météo et annulation pour demain")
 st.write("Générez le bulletin météo pour obtenir les prévisions sur l'ensemble des lignes.")
 
+# 1. Centrage du bouton grâce aux colonnes Streamlit (les côtés servent de poussoirs)
 col_gauche, col_centre, col_droite = st.columns([1, 1.2, 1])
 
 if st.button("Générer le bulletin météo"):
@@ -190,18 +203,26 @@ if st.button("Générer le bulletin météo"):
                 meteo = data["details_meteo"]
                 bulletin = data["bulletin"]
 
+                # Calcul dynamique de la date de demain
                 date_demain = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
                 st.markdown(f"### 🌊 Météo prévue\n**(Marseille / Frioul)**")
                 st.markdown(f"*Bulletin du {date_demain}*")
 
+                # with col_infos:
+                    # Affichage des informations météo les unes au-dessus des autres
                 st.markdown(f"**Hauteur des vagues :** `{meteo['wave_height_max']} m`")
                 st.markdown(f"**Vitesse du vent :** `{meteo['wind_speed_max']} km/h`")
                 st.markdown(f"**Rafales maximales :** `{meteo['wind_gusts_max']} km/h`")
 
+                # 2. Construction d'un tableau propre pour le bulletin
+                # Transforme la liste en DataFrame pour un bel affichage
                 df_bulletin = pd.DataFrame(bulletin)
+                # Renomme les colonnes pour l'utilisateur
                 df_bulletin.columns = ["Ligne", "Risque d'annulation", "Statut"]
+                # Formatage des pourcentages
                 df_bulletin["Risque d'annulation"] = df_bulletin["Risque d'annulation"].apply(lambda x: f"{x:.1%}")
 
+                # Affichage du tableau
                 st.table(df_bulletin)
                 st.caption("Note : Calcul basé sur le bateau 'Ratonneau' et le capitaine par défaut.")
             else:
@@ -211,9 +232,12 @@ if st.button("Générer le bulletin météo"):
             st.error(f"Erreur lors de la génération du bulletin : {e}")
 
 st.markdown('</div>', unsafe_allow_html=True)
+
+# 2. Ajout d'un espace (bottom padding) sous le bouton pour espacer les sections
 st.markdown('<div style="margin-bottom: 5rem;"></div>', unsafe_allow_html=True)
 
 st.divider()
+
 
 
 # --- CONFIGURATION DE LA BARRE LATÉRALE (SANTE API) ---
@@ -229,13 +253,10 @@ with st.sidebar:
         except Exception as exc:  # pragma: no cover - UI feedback
             st.error(f"API indisponible: {exc}")
 
-
 # --- FORMULAIRE DE SIMULATION MANUELLE (TEMPS RÉEL) ---
-# Désactivation temporaire en raison du comportement aberrant du modèle sur les valeurs extrêmes
 st.markdown("##### Simulation de traversée, par ligne")
-st.warning("⚠️ La simulation manuelle et personnalisée est momentanément désactivée pour maintenance du modèle.")
+st.write("Renseignez les champs ci-dessous pour obtenir les prévisions.")
 
-"""
 with st.form("prediction_form"):
     col1, col2 = st.columns(2)
 
@@ -250,6 +271,7 @@ with st.form("prediction_form"):
         wind_s = st.number_input("Vitesse Vent (km/h)", value=15)
         wind_g = st.number_input("Rafales (km/h)", value=25)
         wind_orientation = st.selectbox("Orientation (Rose des vents)", DIRECTIONS_VENT, index=14) # NW par défaut
+        # wind_deg = st.number_input("Orientation (Degrés)", value=290)
 
     st.divider()
 
@@ -265,17 +287,24 @@ with st.form("prediction_form"):
     submitted = st.form_submit_button("Calculer la probabilité d'annulation ou de maintien")
 
     if submitted:
+        # Construction du payload pour l'API
+        # On envoie les valeurs brutes, le backend (FastAPI) s'occupera du One-Hot Encoding
+        # Correspondance Secteur -> Degrés pour le modèle de Machine Learning
         conversion_degres = {
             "N": 0.0, "NE": 45.0, "E": 90.0, "SE": 135.0, 
             "S": 180.0, "SW": 225.0, "W": 270.0, "NW": 290.0
         }
+        # On récupère les degrés associés à la rose des vents sélectionnée (par défaut 290 si NW)
         degres_calcules = conversion_degres.get(wind_orientation, 290.0)
         payload = {
             "wave_height_max": wave_h,
             "wave_period_max": wave_p,
             "wave_direction_dominant": float(wave_dir),
+            # "temperature_max": temp_max,
+            # "temperature_min": temp_min,
             "wind_speed_max": wind_s,
             "wind_gusts_max": wind_g,
+            # Utilise la valeur calculée ci-dessus
             "wind_direction_dominant": float(degres_calcules),
             "Capitaine": capitaine,
             "Bateau": bateau,
@@ -291,7 +320,7 @@ with st.form("prediction_form"):
                 prob_annulation = data["annulation_probability"]
                 prob_maintien = 1 - prob_annulation
 
-                st.divider()
+                st.divider() # Petite ligne de séparation pour la clarté
 
                 if prob_annulation > 0.5:
                     st.error(f"RISQUE D'ANNULATION : {prob_annulation:.1%}")
@@ -301,10 +330,11 @@ with st.form("prediction_form"):
                     st.progress(prob_maintien)
                     st.write(f"Le modèle est confiant à {prob_maintien:.1%} sur le maintien de la desserte.")
 
+                # Détail technique discret en bas
                 with st.expander("Détails techniques"):
                     st.json(data)
+
             else:
-                st.error(f"Erreur API : {res.text}")
+                    st.error(f"Erreur API : {res.text}")
         except Exception as e:
             st.error(f"Erreur de connexion : {e}")
-"""
