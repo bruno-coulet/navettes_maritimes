@@ -4,24 +4,21 @@
 # - Réseau Traefik externe déjà présent sur le VPS
 
 services:
-  navettes-api:
+  api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: navettes_api
+    container_name: navettes-api
+    image: navettes-maritimes-api:latest
     restart: unless-stopped
     env_file:
       - .env
     environment:
       - PYTHONUNBUFFERED=1
-      # - MODEL_PATH=${MODEL_PATH:-/model/model.pkl}
       - MODEL_PATH=/app/predict/api/src/model_v3.pkl  # Chemin absolu dans le conteneur
       - FEATURES_PATH=${FEATURES_PATH:-/model/features.json}
-    # volumes:
-    #   - maritime_artifacts:/model:ro
     expose:
       - "8000"
-    # DIT À L'API OÙ SE TROUVE LE VRAI MAIN.PY
     command: uvicorn predict.api.src.main:app --host 0.0.0.0 --port 8000
     networks:
       - traefik
@@ -35,26 +32,23 @@ services:
   front:
     build:
       context: .
-      dockerfile: Dockerfile # utilise le même Dockerfile
-    container_name: navettes_front
+      dockerfile: Dockerfile
+    container_name: navettes-front
+    image: navettes-maritimes-front:latest
     restart: unless-stopped
     env_file:
       - .env
     environment:
       - PYTHONUNBUFFERED=1
-      # - API_URL=${API_URL:-https://api.navettes-maritimes.lab.zanza-creation.com}
       - STREAMLIT_PORT=${STREAMLIT_PORT:-8501}
-      # Le front appelle l'API directement par son nom de service Docker
-      # sur le port 8000
-      # force l'URL à pointer directement là où le POST est attendu
+      # Point de vigilance MLOps : On utilise le container_name exact défini ci-dessus ("navettes-api")
+      # pour que la résolution DNS Docker interne fonctionne correctement.
       - API_URL=http://navettes-api:8000/predict
-
-    # On ajuste le chemin de l'app.py
     entrypoint: ["streamlit", "run", "predict/front/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
     expose:
       - "8501"
     depends_on:
-      - navettes-api
+      - api
     networks:
       - traefik
     labels:

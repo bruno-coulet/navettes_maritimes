@@ -235,76 +235,79 @@ with st.sidebar:
 st.markdown("##### Simulation de traversée, par ligne")
 st.warning("⚠️ La simulation manuelle et personnalisée est momentanément désactivée pour maintenance du modèle.")
 
-"""
-with st.form("prediction_form"):
-    col1, col2 = st.columns(2)
 
-    with col1:
-        st.markdown("##### 🚢 Exploitation")
-        capitaine = st.selectbox("Capitaine (anonymisé)", CAPITAINES)
-        bateau = st.selectbox("Bateau", BATEAUX)
-        ligne = st.selectbox("Ligne", LIGNES)
+# Utilisation d'un flag logique pour désactiver proprement le bloc sans pollution visuelle
+MAINTENANCE_MODE = True
 
-    with col2:
-        st.markdown("##### 🌦️ Conditions Météo")
-        wind_s = st.number_input("Vitesse Vent (km/h)", value=15)
-        wind_g = st.number_input("Rafales (km/h)", value=25)
-        wind_orientation = st.selectbox("Orientation (Rose des vents)", DIRECTIONS_VENT, index=14) # NW par défaut
+if not MAINTENANCE_MODE:
+    with st.form("prediction_form"):
+        col1, col2 = st.columns(2)
 
-    st.divider()
+        with col1:
+            st.markdown("##### 🚢 Exploitation")
+            capitaine = st.selectbox("Capitaine (anonymisé)", CAPITAINES)
+            bateau = st.selectbox("Bateau", BATEAUX)
+            ligne = st.selectbox("Ligne", LIGNES)
 
-    st.markdown("##### 🌊 État de la Mer")
-    sea1, sea2 = st.columns(2)
-    with sea1:
-        wave_h = st.number_input("Hauteur max Vagues (m)", value=0.5, step=0.1, max_value=5.0)
-        wave_p = st.number_input("Période Vagues (s)", value=4.0, step=0.5)
+        with col2:
+            st.markdown("##### 🌦️ Conditions Météo")
+            wind_s = st.number_input("Vitesse Vent (km/h)", value=15)
+            wind_g = st.number_input("Rafales (km/h)", value=25)
+            wind_orientation = st.selectbox("Orientation (Rose des vents)", DIRECTIONS_VENT, index=14) # NW par défaut
 
-    with sea2:
-        wave_dir = st.number_input("Direction de la houle (Degrés)", value=270, step=25)
+        st.divider()
 
-    submitted = st.form_submit_button("Calculer la probabilité d'annulation ou de maintien")
+        st.markdown("##### 🌊 État de la Mer")
+        sea1, sea2 = st.columns(2)
+        with sea1:
+            wave_h = st.number_input("Hauteur max Vagues (m)", value=0.5, step=0.1, max_value=5.0)
+            wave_p = st.number_input("Période Vagues (s)", value=4.0, step=0.5)
 
-    if submitted:
-        conversion_degres = {
-            "N": 0.0, "NE": 45.0, "E": 90.0, "SE": 135.0, 
-            "S": 180.0, "SW": 225.0, "W": 270.0, "NW": 290.0
-        }
-        degres_calcules = conversion_degres.get(wind_orientation, 290.0)
-        payload = {
-            "wave_height_max": wave_h,
-            "wave_period_max": wave_p,
-            "wave_direction_dominant": float(wave_dir),
-            "wind_speed_max": wind_s,
-            "wind_gusts_max": wind_g,
-            "wind_direction_dominant": float(degres_calcules),
-            "Capitaine": capitaine,
-            "Bateau": bateau,
-            "Ligne": ligne,
-            "Vent_Orientation": wind_orientation
-        }
+        with sea2:
+            wave_dir = st.number_input("Direction de la houle (Degrés)", value=270, step=25)
 
-        try:
-            res = requests.post(API_URL, json=payload)
+        submitted = st.form_submit_button("Calculer la probabilité d'annulation ou de maintien")
 
-            if res.status_code == 200:
-                data = res.json()
-                prob_annulation = data["annulation_probability"]
-                prob_maintien = 1 - prob_annulation
+        if submitted:
+            conversion_degres = {
+                "N": 0.0, "NE": 45.0, "E": 90.0, "SE": 135.0, 
+                "S": 180.0, "SW": 225.0, "W": 270.0, "NW": 290.0
+            }
+            degres_calcules = conversion_degres.get(wind_orientation, 290.0)
+            payload = {
+                "wave_height_max": wave_h,
+                "wave_period_max": wave_p,
+                "wave_direction_dominant": float(wave_dir),
+                "wind_speed_max": wind_s,
+                "wind_gusts_max": wind_g,
+                "wind_direction_dominant": float(degres_calcules),
+                "Capitaine": capitaine,
+                "Bateau": bateau,
+                "Ligne": ligne,
+                "Vent_Orientation": wind_orientation
+            }
 
-                st.divider()
+            try:
+                res = requests.post(API_URL, json=payload)
 
-                if prob_annulation > 0.5:
-                    st.error(f"RISQUE D'ANNULATION : {prob_annulation:.1%}")
-                    st.progress(prob_annulation)
+                if res.status_code == 200:
+                    data = res.json()
+                    prob_annulation = data["annulation_probability"]
+                    prob_maintien = 1 - prob_annulation
+
+                    st.divider()
+
+                    if prob_annulation > 0.5:
+                        st.error(f"RISQUE D'ANNULATION : {prob_annulation:.1%}")
+                        st.progress(prob_annulation)
+                    else:
+                        st.success(f"DÉPART PROBABLE : {prob_maintien:.1%}")
+                        st.progress(prob_maintien)
+                        st.write(f"Le modèle est confiant à {prob_maintien:.1%} sur le maintien de la desserte.")
+
+                    with st.expander("Détails techniques"):
+                        st.json(data)
                 else:
-                    st.success(f"DÉPART PROBABLE : {prob_maintien:.1%}")
-                    st.progress(prob_maintien)
-                    st.write(f"Le modèle est confiant à {prob_maintien:.1%} sur le maintien de la desserte.")
-
-                with st.expander("Détails techniques"):
-                    st.json(data)
-            else:
-                st.error(f"Erreur API : {res.text}")
-        except Exception as e:
-            st.error(f"Erreur de connexion : {e}")
-"""
+                    st.error(f"Erreur API : {res.text}")
+            except Exception as e:
+                st.error(f"Erreur de connexion : {e}")
