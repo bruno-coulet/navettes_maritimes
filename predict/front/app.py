@@ -251,11 +251,11 @@ with st.sidebar:
 # --- FORMULAIRE DE SIMULATION MANUELLE (TEMPS RÉEL) ---
 # Désactivation temporaire en raison du comportement aberrant du modèle sur les valeurs extrêmes
 st.markdown("##### Simulation de traversée, par ligne")
-st.warning("⚠️ La simulation manuelle et personnalisée est momentanément désactivée pour maintenance du modèle.")
+# st.warning("⚠️ La simulation manuelle et personnalisée est momentanément désactivée pour maintenance du modèle.")
 
 
 # Utilisation d'un flag logique pour désactiver proprement le bloc sans pollution visuelle
-MAINTENANCE_MODE = True
+MAINTENANCE_MODE = False
 
 if not MAINTENANCE_MODE:
     with st.form("prediction_form"):
