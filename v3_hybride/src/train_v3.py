@@ -32,6 +32,34 @@ DATA_PATH = V3_DIR / "data/processed/training_merged_v3.parquet"
 MODEL_PATH = ARTIFACTS_DIR / "model_v3.pkl"
 METRICS_PATH = ARTIFACTS_DIR / "metrics_v3.json"
 
+WEATHER_GUARDRAILS = {
+    "enabled": True,
+    "min_reason_count": 2,
+    "thresholds": {
+        "wind_speed_max": {"moderate": 45.0, "severe": 55.0, "unit": "km/h", "label": "vent soutenu"},
+        "wind_gusts_max": {"moderate": 60.0, "severe": 75.0, "unit": "km/h", "label": "rafales fortes"},
+        "wave_height_max": {"moderate": 2.0, "severe": 2.8, "unit": "m", "label": "houle importante"},
+        "wind_wave_height_max": {"moderate": 1.2, "severe": 1.8, "unit": "m", "label": "mer du vent elevee"},
+        "swell_wave_height_max": {"moderate": 1.5, "severe": 2.2, "unit": "m", "label": "swell eleve"},
+    },
+    "keywords": [
+        "tempete",
+        "orage",
+        "agite",
+        "agitée",
+        "tres agite",
+        "très agité",
+        "fort",
+        "violent",
+        "violente",
+        "mauvais",
+        "mauvaise",
+        "houleux",
+        "houleuse",
+        "difficile",
+    ],
+}
+
 
 
 # Import features
@@ -172,6 +200,7 @@ def save_artifacts(model, metrics, feature_names):
         "n_samples": metrics.get("n_samples", 0),
         "n_features": len(feature_names),
         "feature_names": feature_names, # Ici on met la liste
+        "weather_guardrails": WEATHER_GUARDRAILS,
         "trained_at": datetime.now().isoformat(),
         "model_type": "RandomForest_V3_Hybride"
     }

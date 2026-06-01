@@ -73,6 +73,15 @@ def nettoyer_statut(statut_texte):
         return statut_texte
     return statut_texte.replace("✅", "").replace("❌", "").strip()
 
+
+def afficher_garde_fou_meteo(data: dict, contexte: str) -> None:
+    """Affiche un message explicite quand la météo force l'annulation."""
+    if not isinstance(data, dict) or not data.get("guardrail_triggered"):
+        return
+
+    reason = data.get("guardrail_reason") or "Météo défavorable détectée"
+    st.error(f"{contexte} - garde-fou météo activé : {reason}")
+
 def generer_bulletin_demain():
     """Appelle l'API pour générer le bulletin complet de demain."""
     try:
@@ -103,6 +112,15 @@ def generer_bulletin_demain():
             # Formatage
             df_bulletin["Risque d'annulation"] = df_bulletin["Risque d'annulation"].apply(lambda x: f"{x:.1%}")
             df_bulletin["Statut"] = df_bulletin["Statut"].apply(nettoyer_statut)
+
+            guardrail_lines = [
+                item for item in bulletin
+                if isinstance(item, dict) and item.get("guardrail_triggered")
+            ]
+            if guardrail_lines:
+                reasons = [item.get("guardrail_reason") for item in guardrail_lines if item.get("guardrail_reason")]
+                message = reasons[0] if reasons else f"{len(guardrail_lines)} ligne(s) bloquée(s) par la météo"
+                st.error(f"Garde-fou météo activé sur le bulletin : {message}")
 
             st.table(df_bulletin)
             st.caption("Note : Calcul basé sur le bateau 'Ratonneau' et le capitaine par défaut.")
@@ -304,6 +322,8 @@ if not MAINTENANCE_MODE:
                         st.success(f"DÉPART PROBABLE : {prob_maintien:.1%}")
                         st.progress(prob_maintien)
                         st.write(f"Le modèle est confiant à {prob_maintien:.1%} sur le maintien de la desserte.")
+
+                    afficher_garde_fou_meteo(data, "Prédiction manuelle")
 
                     with st.expander("Détails techniques"):
                         st.json(data)
