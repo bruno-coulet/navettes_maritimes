@@ -1,8 +1,8 @@
-# 🚢 Module Predict : API & Interface Utilisateur
+# Module Predict : API & Interface Utilisateur
 
 Ce module constitue la couche "Inférence" du projet. Il transforme le modèle entraîné en un outil opérationnel utilisable par les équipes sur le terrain pour anticiper les annulations de navettes.
 
-## 📂 Structure du dossier
+## Structure du dossier
 
 ```text
 predict/
@@ -18,7 +18,7 @@ predict/
 
 ```
 
-## 🧠 L'API (FastAPI)
+## L'API (FastAPI)
 
 L'API est le point central qui reçoit les données météo et logistiques, les formate, et interroge le modèle.
 
@@ -26,6 +26,7 @@ L'API est le point central qui reçoit les données météo et logistiques, les 
 
 * **Dictionnaire Zéro** : L'API initialise systématiquement les 136+ colonnes attendues par le modèle à `0.0`. Cela permet au Front de n'envoyer que les variables importantes (Vent, Houle) sans faire planter le calcul.
 * **Gestion des orientations** : Convertit les sélecteurs de texte (NW, SE, etc.) en colonnes binaires (One-Hot Encoding) pour le modèle.
+* **Unités météo** : Open-Meteo renvoie les vitesses de vent en km/h par défaut. L'API et le front affichent donc les champs `wind_speed_10m` / `wind_gusts_10m` en km/h, sauf si le paramètre `wind_speed_unit` est explicitement changé. À l'inverse, les données historiques du CSV maritime utilisent `VentNoeud` en nœuds pour la vitesse métier, et `Vent` pour la direction.
 * **Route Tomorrow** (`/predict/tomorrow`) : Route spéciale qui agrège les données d'Open-Meteo pour générer un bulletin complet de toutes les lignes pour le lendemain en un seul appel.
 
 ### Lancement :
@@ -36,7 +37,7 @@ uvicorn main:app --reload --port 8000
 
 ```
 
-## 🎨 Le Frontend (Streamlit)
+## Le Frontend (Streamlit)
 
 Une interface moderne et intuitive conçue pour les tablettes et ordinateurs des agents de quai.
 
@@ -54,13 +55,15 @@ streamlit run app.py
 
 ```
 
-## 🔄 Flux de données
+## Flux de données
 
 1. **Utilisateur** : Saisit une condition ou clique sur "Bulletin Automatique".
 2. **Front** : Envoie une requête JSON à l'API.
 3. **API** :
 * Complète les données manquantes (températures, ciels par défaut).
 * Aligne les colonnes selon `metrics_v3.json`.
+* Consomme les vitesses de vent en km/h par défaut, comme renvoyées par Open-Meteo.
+* Garde les données métier historiques dans leur unité d'origine quand elles proviennent du CSV maritime (`VentNoeud` en nœuds).
 * Prédit la probabilité via `model.pkl`.
 
 

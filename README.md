@@ -18,6 +18,7 @@ uv run python -m v1_baseline.src.train_v1
 
 2. Étape V2 : Pipeline Météo Autonome (Collecte & ML)
 Exécute le pipeline complet (Collecte Open-Meteo, Consolidation Parquet, Fusion des features d'annulation, et Entraînement du modèle RandomForest V2).
+Attention: le CSV historique `maritime_clean.csv` contient une vitesse de vent métier en nœuds dans `VentNoeud`, tandis que `Vent` représente la direction. Open-Meteo renvoie de son côté les vitesses de vent en km/h par défaut via `wind_speed_unit` ; nous conservons donc ces valeurs en km/h dans le pipeline météo et l'inférence, sans convertir les données historiques métier.
 
 ```Bash
 uv run python -m v2_meteo.src.pipeline
@@ -73,6 +74,7 @@ C'est le cœur de l'intelligence du projet. Il fusionne les données d'exploitat
 Le module prêt pour la production. Il s'affranchit des scripts lourds d'entraînement pour ne proposer que l'usage pratique :
 
 API Backend (FastAPI) : Charge le modèle final, intègre un mécanisme de Dictionnaire Zéro pour immuniser le système contre les champs manquants, gère l'encodage One-Hot des roses des vents et intègre un client Open-Meteo temps réel.
+Les champs de vent reçus d'Open-Meteo sont utilisés en km/h par défaut. Les données métiers historiques restent dans leur unité d'origine (`VentNoeud` en nœuds) et servent surtout aux modules V1/V3 selon les features choisies.
 
 Frontend UI (Streamlit) : Interface graphique épurée affichant un simulateur de traversée en temps réel et un générateur de bulletin automatique pour le lendemain à destination des agents de quai.
 
