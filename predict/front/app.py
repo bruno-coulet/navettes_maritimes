@@ -74,6 +74,40 @@ def nettoyer_statut(statut_texte):
     return statut_texte.replace("✅", "").replace("❌", "").strip()
 
 
+def construire_tableau_bulletin(bulletin: list[dict]) -> pd.DataFrame:
+    """Construit un tableau lisible à partir du bulletin JSON de l'API."""
+    df_bulletin = pd.DataFrame(bulletin)
+
+    colonnes_affichage = [
+        ("ligne", "Ligne"),
+        ("probabilite_annulation", "Risque d'annulation"),
+        ("statut", "Statut"),
+        ("guardrail_triggered", "Garde-fou météo"),
+        ("guardrail_reason", "Motif garde-fou"),
+    ]
+
+    colonnes_presentes = [
+        colonne for colonne, _ in colonnes_affichage if colonne in df_bulletin.columns
+    ]
+    df_bulletin = df_bulletin[colonnes_presentes]
+    df_bulletin = df_bulletin.rename(columns=dict(colonnes_affichage))
+
+    if "Risque d'annulation" in df_bulletin.columns:
+        df_bulletin["Risque d'annulation"] = df_bulletin["Risque d'annulation"].apply(
+            lambda x: f"{x:.1%}" if pd.notna(x) else x
+        )
+
+    if "Statut" in df_bulletin.columns:
+        df_bulletin["Statut"] = df_bulletin["Statut"].apply(nettoyer_statut)
+
+    if "Garde-fou météo" in df_bulletin.columns:
+        df_bulletin["Garde-fou météo"] = df_bulletin["Garde-fou météo"].map(
+            lambda x: "Oui" if bool(x) else "Non"
+        )
+
+    return df_bulletin
+
+
 def afficher_garde_fou_meteo(data: dict, contexte: str) -> None:
     """Affiche un message explicite quand la météo force l'annulation."""
     if not isinstance(data, dict) or not data.get("guardrail_triggered"):
@@ -92,12 +126,12 @@ def generer_bulletin_demain():
             bulletin = data["bulletin"]
 
             st.divider()
-            
+
             date_demain = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
-            st.markdown(f"### 🌊 Météo prévue")
-            st.markdown(f"**(Marseille / Frioul)**")
+            st.markdown("### 🌊 Météo prévue")
+            st.markdown("**(Marseille / Frioul)**")
             st.markdown(f"📅 *Bulletin du {date_demain}*\n")
-            
+
             # Affichage vertical sous le titre
             st.markdown(f"**Hauteur des vagues :** `{meteo['wave_height_max']} m`")
             st.markdown(f"**Vitesse du vent :** `{meteo['wind_speed_max']} km/h`")
@@ -106,24 +140,29 @@ def generer_bulletin_demain():
             st.divider()
 
             # Construction du tableau
-            df_bulletin = pd.DataFrame(bulletin)
-            df_bulletin.columns = ["Ligne", "Risque d'annulation", "Statut"]
-            
-            # Formatage
-            df_bulletin["Risque d'annulation"] = df_bulletin["Risque d'annulation"].apply(lambda x: f"{x:.1%}")
-            df_bulletin["Statut"] = df_bulletin["Statut"].apply(nettoyer_statut)
+            df_bulletin = construire_tableau_bulletin(bulletin)
 
             guardrail_lines = [
                 item for item in bulletin
                 if isinstance(item, dict) and item.get("guardrail_triggered")
             ]
             if guardrail_lines:
-                reasons = [item.get("guardrail_reason") for item in guardrail_lines if item.get("guardrail_reason")]
-                message = reasons[0] if reasons else f"{len(guardrail_lines)} ligne(s) bloquée(s) par la météo"
+                reasons = [
+                    item.get("guardrail_reason")
+                    for item in guardrail_lines
+                    if item.get("guardrail_reason")
+                ]
+                message = (
+                    reasons[0]
+                    if reasons
+                    else f"{len(guardrail_lines)} ligne(s) bloquée(s) par la météo"
+                )
                 st.error(f"Garde-fou météo activé sur le bulletin : {message}")
 
             st.table(df_bulletin)
-            st.caption("Note : Calcul basé sur le bateau 'Ratonneau' et le capitaine par défaut.")
+            st.caption(
+                "Note : Calcul basé sur le bateau 'Ratonneau' et le capitaine par défaut."
+            )
         else:
             st.error(f"Impossible de générer le bulletin (Code {res.status_code})")
     except Exception as e:
@@ -209,19 +248,19 @@ if st.button("Générer le bulletin météo"):
                 bulletin = data["bulletin"]
 
                 date_demain = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
-                st.markdown(f"### 🌊 Météo prévue\n**(Marseille / Frioul)**")
+                st.markdown("### 🌊 Météo prévue\n**(Marseille / Frioul)**")
                 st.markdown(f"*Bulletin du {date_demain}*")
 
                 st.markdown(f"**Hauteur des vagues :** `{meteo['wave_height_max']} m`")
                 st.markdown(f"**Vitesse du vent :** `{meteo['wind_speed_max']} km/h`")
                 st.markdown(f"**Rafales maximales :** `{meteo['wind_gusts_max']} km/h`")
 
-                df_bulletin = pd.DataFrame(bulletin)
-                df_bulletin.columns = ["Ligne", "Risque d'annulation", "Statut"]
-                df_bulletin["Risque d'annulation"] = df_bulletin["Risque d'annulation"].apply(lambda x: f"{x:.1%}")
+                df_bulletin = construire_tableau_bulletin(bulletin)
 
                 st.table(df_bulletin)
-                st.caption("Note : Calcul basé sur le bateau 'Ratonneau' et le capitaine par défaut.")
+                st.caption(
+                    "Note : Calcul basé sur le bateau 'Ratonneau' et le capitaine par défaut."
+                )
             else:
                 st.error("Impossible de récupérer le bulletin automatique.")
 
@@ -271,7 +310,11 @@ if not MAINTENANCE_MODE:
             st.markdown("##### 🌦️ Conditions Météo")
             wind_s = st.number_input("Vitesse Vent (km/h)", value=15)
             wind_g = st.number_input("Rafales (km/h)", value=25)
-            wind_orientation = st.selectbox("Orientation (Rose des vents)", DIRECTIONS_VENT, index=14) # NW par défaut
+            wind_orientation = st.selectbox(
+                "Orientation (Rose des vents)",
+                DIRECTIONS_VENT,
+                index=14,  # NW par défaut
+            )
 
         st.divider()
 
@@ -288,8 +331,14 @@ if not MAINTENANCE_MODE:
 
         if submitted:
             conversion_degres = {
-                "N": 0.0, "NE": 45.0, "E": 90.0, "SE": 135.0, 
-                "S": 180.0, "SW": 225.0, "W": 270.0, "NW": 290.0
+                "N": 0.0,
+                "NE": 45.0,
+                "E": 90.0,
+                "SE": 135.0,
+                "S": 180.0,
+                "SW": 225.0,
+                "W": 270.0,
+                "NW": 290.0,
             }
             degres_calcules = conversion_degres.get(wind_orientation, 290.0)
             payload = {
@@ -321,7 +370,9 @@ if not MAINTENANCE_MODE:
                     else:
                         st.success(f"DÉPART PROBABLE : {prob_maintien:.1%}")
                         st.progress(prob_maintien)
-                        st.write(f"Le modèle est confiant à {prob_maintien:.1%} sur le maintien de la desserte.")
+                        st.write(
+                            f"Le modèle est confiant à {prob_maintien:.1%} sur le maintien de la desserte."
+                        )
 
                     afficher_garde_fou_meteo(data, "Prédiction manuelle")
 
